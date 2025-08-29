@@ -1,23 +1,23 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import CadastroProduto from './components/CadastroProduto';
 
 function App() {
+  const [ultimoCadastro, setUltimoCadastro] = useState(null);
+  const handleSubmit = (dados) => {
+    setUltimoCadastro(dados);
+    // (futuro) aqui chamaremos cadastrarProduto + supabase
+    console.log('Produto cadastrado (simulação):', dados);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
+      <CadastroProduto onSubmit={handleSubmit} />
+      {ultimoCadastro && (
+        <pre style={{ marginTop: '1rem', background: '#f5f5f5', padding: '0.5rem' }}>
+{JSON.stringify(ultimoCadastro, null, 2)}
+        </pre>
+      )}
     </div>
   );
 }
