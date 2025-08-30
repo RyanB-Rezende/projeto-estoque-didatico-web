@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { addProduto } from '../services/produtos';
+import { addProduto } from '../services/produtosService';
 
 // Função de domínio (será expandida com persistência Supabase em testes futuros)
 // Regras atuais (dirigidas por testes):
@@ -21,7 +21,9 @@ export async function cadastrarProduto(dados) {
 // Formulário simples de cadastro de produto (sem estilização por enquanto)
 // Campos segundo a tabela: nome (obrigatório), medida (obrigatório), local (opcional), codigo (opcional), data_entrada (opcional), entrada (opcional - default 0)
 // Campos saida e saldo serão tratados em fluxos futuros (lista/movimentação)
-export default function CadastroProduto({ onSubmit }) {
+// Componente estilizado usando Bootstrap 5
+// Pode ser usado embutido em uma página ou dentro de um modal externo.
+export default function CadastroProduto({ onSubmit, titulo = 'Cadastro de Produto', modo = 'create', asModal = true }) {
 	const [formData, setFormData] = useState({
 		nome: '',
 		medida: '', // número (id da medida)
@@ -113,89 +115,84 @@ export default function CadastroProduto({ onSubmit }) {
 		}
 	};
 
+
+	// estilos inline para replicar layout da imagem (modal central, fundo suave, campos sublinhados)
+	const wrapStyles = asModal ? {
+		position: 'fixed', inset: 0, zIndex: 1050,
+		display: 'flex', alignItems: 'center', justifyContent: 'center',
+		background: 'rgba(0,0,0,0.55)'
+	} : {};
+	const panelStyles = {
+		background: '#f5f2fa',
+		borderRadius: '28px',
+		width: '360px',
+		maxWidth: '92vw',
+		padding: '28px 36px 24px',
+		boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
+		fontSize: '14px'
+	};
+	const labelCls = 'fw-normal mb-1 small text-body-secondary';
+	const lineField = 'w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none';
+	const errorText = 'text-danger small mt-1';
+
 	return (
-		<div>
-			<h1>Cadastro de Produto</h1>
-			<form role="form" onSubmit={handleSubmit}>
-				<div>
-					<label htmlFor="nome">Nome</label>
-					<input
-						id="nome"
-						name="nome"
-						type="text"
-						value={formData.nome}
-						onChange={handleChange}
-						aria-invalid={!!errors.nome}
-					/>
-					{errors.nome && <span role="alert">{errors.nome}</span>}
+		<div style={wrapStyles} role={asModal ? 'dialog' : undefined} aria-modal={asModal || undefined}>
+			<form onSubmit={handleSubmit} noValidate style={panelStyles} className="bg-light-subtle">
+				<style>{`
+					form .form-control:focus, form select:focus { box-shadow:none; }
+					.line-select { appearance:none; -webkit-appearance:none; padding-right:18px; cursor:pointer; }
+					.btn-pill-save { background:#ffffff; border:1px solid #e3dff0; color:#4a4a5e; font-weight:500; }
+					.btn-pill-save:hover { background:#f1eef7; }
+					.btn-cancel-link { color:#6a55c2; text-decoration:none; }
+					.btn-cancel-link:hover { text-decoration:underline; }
+				`}</style>
+				<h1 className="h5 fw-semibold mb-4" style={{letterSpacing:'0.2px'}}>{titulo}</h1>
+				<div className="mb-3">
+					<label htmlFor="nome" className={labelCls}>Nome</label>
+					<input id="nome" name="nome" type="text" className={lineField + (errors.nome ? ' is-invalid' : '')} value={formData.nome} onChange={handleChange} />
+					{errors.nome && <div className={errorText}>{errors.nome}</div>}
 				</div>
-				<div>
-					<label htmlFor="medida">Medida</label>
-					<select
-						id="medida"
-						name="medida"
-						value={formData.medida}
-						onChange={handleChange}
-						disabled={loadingMedidas || !!erroMedidas}
-						aria-invalid={!!errors.medida}
-					>
-						<option value="">{loadingMedidas ? 'Carregando...' : 'Selecione'}</option>
-						{medidas.map(m => (
-							<option key={m.id} value={m.id}>{m.nome}</option>
-						))}
+				<div className="mb-3">
+					<label htmlFor="medida" className={labelCls}>Medida</label>
+					<select id="medida" name="medida" className={lineField + ' line-select fw-semibold' + (errors.medida ? ' is-invalid' : '')} value={formData.medida} onChange={handleChange} disabled={loadingMedidas || !!erroMedidas}>
+						<option value="" disabled>{loadingMedidas ? 'Carregando...' : 'Selecione'}</option>
+						{medidas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
 					</select>
-					{erroMedidas && <span role="alert">{erroMedidas}</span>}
-					{errors.medida && <span role="alert">{errors.medida}</span>}
+					{(erroMedidas || errors.medida) && <div className={errorText}>{erroMedidas || errors.medida}</div>}
 				</div>
-				<div>
-					<label htmlFor="local">Local</label>
-					<input
-						id="local"
-						name="local"
-						type="text"
-						value={formData.local}
-						onChange={handleChange}
-					/>
+				<div className="mb-3">
+					<label htmlFor="local" className={labelCls}>Local</label>
+					<input id="local" name="local" type="text" className={lineField} value={formData.local} onChange={handleChange} />
 				</div>
-				<div>
-					<label htmlFor="codigo">Código</label>
-					<input
-						id="codigo"
-						name="codigo"
-						type="text"
-						value={formData.codigo}
-						onChange={handleChange}
-					/>
+				<div className="mb-3">
+					<label htmlFor="codigo" className={labelCls}>Código</label>
+					<input id="codigo" name="codigo" type="text" className={lineField} value={formData.codigo} onChange={handleChange} />
 				</div>
-				<div>
-					<label htmlFor="data_entrada">Data de Entrada</label>
-					<input
-						id="data_entrada"
-						name="data_entrada"
-						type="date"
-						value={formData.data_entrada}
-						onChange={handleChange}
-					/>
+				<div className="mb-4">
+					<label htmlFor="data_entrada" className={labelCls + ' d-block'}>Data de Entrada</label>
+					<div className="d-flex align-items-center gap-2">
+						<input id="data_entrada" name="data_entrada" type="date" className={lineField + ' flex-grow-1'} value={formData.data_entrada} onChange={handleChange} style={{maxWidth:'160px'}} />
+						<i className="bi bi-calendar-event" style={{fontSize:'20px'}}></i>
+					</div>
 				</div>
-				<div>
-					<label htmlFor="entrada">Quantidade de Entrada</label>
-					<input
-						id="entrada"
-						name="entrada"
-						type="number"
-						value={formData.entrada}
-						onChange={handleChange}
-						aria-invalid={!!errors.entrada}
-						min="0"
-					/>
-					{errors.entrada && <span role="alert">{errors.entrada}</span>}
+				{/* Quantidade não aparecia na imagem original do app, mas manter conforme pedido */}
+				<div className="mb-4">
+					<label htmlFor="entrada" className={labelCls}>Quantidade</label>
+					<input id="entrada" name="entrada" type="number" min="0" className={lineField + (errors.entrada ? ' is-invalid' : '')} value={formData.entrada} onChange={handleChange} />
+					{errors.entrada && <div className={errorText}>{errors.entrada}</div>}
 				</div>
-				<button type="submit" disabled={salvando}>{salvando ? 'Salvando...' : 'Salvar'}</button>
+				<div className="d-flex justify-content-end align-items-center gap-3">
+					<button type="button" className="btn btn-sm btn-cancel-link" onClick={() => { setFormData({ nome: '', medida: '', local: '', codigo: '', data_entrada: '', entrada: '0' }); setErrors({}); setStatus({ tipo: null, mensagem: '' }); }}>Cancelar</button>
+					<button type="submit" className="btn btn-sm btn-pill-save rounded-pill px-4" disabled={salvando}>{iConsLoading(salvando)}{salvando ? 'Salvando' : 'Salvar'}</button>
+				</div>
+				{status.mensagem && <div className={`mt-3 small ${status.tipo === 'erro' ? 'text-danger' : 'text-success'}`}>{status.mensagem}</div>}
 			</form>
-				{status.mensagem && (
-					<p style={{ color: status.tipo === 'erro' ? 'red' : 'green' }}>{status.mensagem}</p>
-				)}
 		</div>
 	);
+}
+
+// pequeno helper de ícone de loading
+function iConsLoading(flag){
+  return flag ? <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> : <i className="bi bi-save me-1"></i>;
 }
 
