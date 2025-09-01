@@ -20,7 +20,7 @@ jest.mock('../services/supabase', () => {
   };
 });
 
-import { getProdutos, getProdutoById, addProduto, updateProduto, deleteProduto, getMedidas } from '../services/produtos';
+import { getProdutos, getProdutoById, addProduto, updateProduto, deleteProduto, getMedidas } from '../services/produtosService';
 import { __setTable, __reset, __getLog } from '../services/supabase';
 
 beforeEach(() => {
