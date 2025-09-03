@@ -1,0 +1,263 @@
+import { useEffect, useState } from 'react';
+import { getProdutos, deleteProduto, getMedidas } from '../services/produtosService';
+import CadastroProduto from './CadastroProduto';
+
+// Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
+// Requisitos cobertos pelos testes:
+//  - Mostrar mensagem "Nenhum produto cadastrado" quando lista vazia.
+//  - Mostrar heading "Lista de Produtos" e uma tabela com produtos quando houver itens.
+//  - Permitir remover produto ao clicar no botão com title="Remover" (atualiza lista).
+// Campos básicos exibidos: nome, medida, saldo (demais simplificados ou placeholders).
+
+export default function ProdutoList() {
+	const [produtos, setProdutos] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+	const [showAdd, setShowAdd] = useState(false);
+	const [page, setPage] = useState(1);
+	const [toast, setToast] = useState(null); // {msg, variant}
+	const [medidasMap, setMedidasMap] = useState({}); // { id: nome }
+	const PAGE_SIZE = 25; // quantidade de produtos por página (ajuste conforme necessidade)
+
+	// Carrega produtos (pode ser chamado para refresh silencioso)
+	const loadProdutos = async () => {
+		try {
+			const data = await getProdutos();
+			setProdutos(data || []);
+		} catch (e) {
+			setError('Erro ao carregar produtos');
+		}
+	};
+
+	useEffect(() => {
+		(async () => {
+			await loadProdutos();
+			setLoading(false);
+		})();
+	}, []);
+
+	// Carrega nomes de medidas para exibir em vez do id
+	useEffect(() => {
+		(async () => {
+			try {
+				if (typeof getMedidas === 'function') {
+					const arr = await getMedidas();
+					if (Array.isArray(arr)) {
+						const map = {};
+						arr.forEach(m => {
+							const id = m.id_medida || m.id;
+							const nome = m.medida || m.nome;
+							if (id != null) map[id] = nome || String(id);
+						});
+						setMedidasMap(map);
+					}
+				}
+			} catch (e) {
+				// silencioso
+			}
+		})();
+	}, []);
+
+	// Garante que página atual sempre válida ao alterar lista
+	useEffect(() => {
+		const totalPages = Math.max(1, Math.ceil(produtos.length / PAGE_SIZE));
+		if (page > totalPages) setPage(totalPages);
+	}, [produtos, page]);
+
+	const handleDelete = async (p) => {
+		try {
+			await deleteProduto(p.id_produtos);
+			// Refresh para garantir consistência (ex: remoção em backend com triggers)
+			await loadProdutos();
+		} catch (e) {
+			// Erro silencioso mínimo
+		}
+	};
+
+	const showToast = (msg, variant = 'success') => {
+		setToast({ msg, variant });
+		setTimeout(() => setToast(null), 3200);
+	};
+
+	const handleAddSuccess = async (novo) => {
+		setShowAdd(false);
+		showToast(`Produto "${novo?.nome || 'Novo'}" cadastrado`, 'success');
+		// Recarrega a lista (garante dados oficiais)
+		await loadProdutos();
+		setPage(1); // volta para primeira página para ver novo item
+	};
+
+	const headerStyles = {
+		background: 'linear-gradient(90deg,#0d6efd,#0a58ca)',
+		color: '#fff',
+		padding: '10px 18px',
+		borderRadius: '0 0 12px 12px',
+		display: 'flex',
+		alignItems: 'center',
+		gap: '14px'
+	};
+	const addBtnCls = 'btn btn-sm d-flex align-items-center gap-1';
+
+	if (loading) {
+		return <div className="text-center py-4">Carregando...</div>;
+	}
+
+	if (error) {
+		return <div className="alert alert-danger" role="alert">{error}</div>;
+	}
+
+	if (!produtos.length) {
+		return <div className="container alert alert-info my-3" role="alert">Nenhum produto cadastrado.</div>;
+	}
+
+		// Paginação simples: determina fatia e total
+		const totalPages = Math.max(1, Math.ceil(produtos.length / PAGE_SIZE));
+		const start = (page - 1) * PAGE_SIZE;
+		const visible = produtos.slice(start, start + PAGE_SIZE);
+		const goTo = async (p) => {
+			if (p >= 1 && p <= totalPages && p !== page) {
+				setPage(p);
+				// Refresh ao trocar de página para dados sempre atualizados
+				await loadProdutos();
+			}
+		};
+
+		return (
+		<div className="container mt-3">
+			{/* Header estilizado */}
+			<div style={headerStyles} className="mb-3 shadow-sm">
+				<h2 className="h6 mb-0 flex-grow-1" style={{letterSpacing:'0.4px'}}>Lista de Produtos</h2>
+				<span className="badge rounded-pill bg-light text-dark">{produtos.length}</span>
+				<button
+					type="button"
+					className={addBtnCls + ' btn-warning fw-semibold'}
+					style={{border:'none', borderRadius:'32px', padding:'6px 14px'}}
+					onClick={() => setShowAdd(true)}
+					aria-label="Adicionar produto"
+				>
+					<i className="bi bi-plus-circle-fill"></i> <span className="d-none d-sm-inline">Adicionar</span>
+				</button>
+			</div>
+
+			<div className="table-responsive d-none d-md-block">
+				<table className="table table-sm table-hover align-middle">
+					<thead className="table-light">
+						<tr>
+							<th>Nome</th>
+							<th style={{ width: '90px' }}>Medida</th>
+							<th style={{ width: '100px' }}>Saldo</th>
+							<th style={{ width: '90px' }} className="text-end">Ações</th>
+						</tr>
+					</thead>
+						<tbody>
+							{visible.map(p => (
+								<tr key={p.id_produtos}>
+									<td><strong>{p.nome}</strong></td>
+									<td>{medidasMap[p.medida] || p.medida}</td>
+									<td>{p.saldo}</td>
+									<td className="text-end">
+										<button
+											type="button"
+											className="btn btn-outline-danger btn-sm"
+											title="Remover"
+											onClick={() => handleDelete(p)}
+										>
+											<i className="bi bi-trash"></i>
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+				</table>
+			</div>
+			{/* versão simplificada mobile (cards) */}
+			<div className="d-md-none">
+				<div className="row g-3">
+					{visible.map(p => (
+						<div key={p.id_produtos} className="col-12">
+							<div className="card shadow-sm">
+								<div className="card-body py-2">
+									<div className="d-flex justify-content-between align-items-start">
+										<div>
+											<div className="fw-semibold small mb-1">{p.nome}</div>
+											<div className="text-muted small">Saldo: {p.saldo}</div>
+										</div>
+										<button
+											className="btn btn-outline-danger btn-sm"
+											aria-label={`Remover ${p.nome}`}
+											onClick={() => handleDelete(p)}
+										>
+											<i className="bi bi-trash"></i>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+
+			{/* Modal sobreposto para adicionar produto (sem search/pdf ainda) */}
+					{showAdd && (
+						<div
+							role="dialog"
+							aria-modal="true"
+							style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center'}}
+						>
+							<CadastroProduto asModal={false} onSubmit={handleAddSuccess} onCancel={()=>setShowAdd(false)} />
+						</div>
+					)}
+
+							{/* Paginação compacta: seta esquerda, indicador e seta direita */}
+							{produtos.length > PAGE_SIZE && (
+								<div className="mt-3 d-flex justify-content-center align-items-center gap-2" aria-label="Paginação de produtos">
+									<button
+										type="button"
+										className="btn btn-outline-secondary btn-sm"
+										onClick={()=>goTo(page-1)}
+										disabled={page===1}
+										aria-label="Página anterior"
+									>
+										<i className="bi bi-chevron-left"></i>
+									</button>
+									<span className="small fw-semibold" aria-live="polite">{page} / {totalPages}</span>
+									<button
+										type="button"
+										className="btn btn-outline-secondary btn-sm"
+										onClick={()=>goTo(page+1)}
+										disabled={page===totalPages}
+										aria-label="Próxima página"
+									>
+										<i className="bi bi-chevron-right"></i>
+									</button>
+								</div>
+							)}
+
+							{/* Toast de feedback de cadastro */}
+							{toast && (
+								<div
+									role="status"
+									aria-live="polite"
+									style={{
+										position: 'fixed',
+										top: '10px',
+										left: '50%',
+										transform: 'translate(-50%, 0)',
+										background: toast.variant === 'success' ? '#198754' : '#6c757d',
+										color: '#fff',
+										padding: '8px 16px',
+										borderRadius: '8px',
+										boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+										fontSize: '0.85rem',
+										zIndex: 4000,
+										animation: 'fadeSlide .45s ease'
+									}}
+								>
+									{toast.msg}
+									<style>{`@keyframes fadeSlide { from { opacity:0; transform:translate(-50%,-8px);} to { opacity:1; transform:translate(-50%,0);} }`}</style>
+								</div>
+							)}
+		</div>
+	);
+}
+

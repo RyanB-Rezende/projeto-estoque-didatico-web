@@ -1,23 +1,32 @@
 import React, { useState } from 'react';
 import './App.css';
-import CadastroProduto from './components/CadastroProduto';
+import Login from './components/auth/Login';
+import ProdutoList from './components/ProdutoList';
+import { logout, isAuthenticated } from './services/authService';
 
 function App() {
-  const [ultimoCadastro, setUltimoCadastro] = useState(null);
-  const handleSubmit = (dados) => {
-    setUltimoCadastro(dados);
-    // (futuro) aqui chamaremos cadastrarProduto + supabase
-    console.log('Produto cadastrado (simulação):', dados);
+  const [session, setSession] = useState(null);
+
+  const handleLoginSuccess = (sess) => {
+    setSession(sess);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    setSession(null);
+  };
+
+  if (!session || !isAuthenticated()) {
+    return <Login onSuccess={handleLoginSuccess} />;
+  }
+
   return (
-    <div style={{ padding: '1rem', fontFamily: 'sans-serif' }}>
-      <CadastroProduto onSubmit={handleSubmit} />
-      {ultimoCadastro && (
-        <pre style={{ marginTop: '1rem', background: '#f5f5f5', padding: '0.5rem' }}>
-{JSON.stringify(ultimoCadastro, null, 2)}
-        </pre>
-      )}
+    <div style={{fontFamily:'sans-serif'}}>
+      <nav className="navbar navbar-light bg-light px-3 shadow-sm" style={{position:'sticky',top:0,zIndex:100}}>
+        <span className="navbar-brand mb-0 h6">Estoque</span>
+        <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>Sair</button>
+      </nav>
+      <ProdutoList />
     </div>
   );
 }

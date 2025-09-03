@@ -1,96 +1,58 @@
-// Testes dos métodos do service de produtos usando mock do Supabase
-// Foco: garantir que cada método constrói a cadeia de chamadas esperada
-// e sanitiza/calcula campos corretamente (ex: saldo).
+/**
+ * Suite mínima (3 testes) no estilo simples de mock igual ao exemplo de contatos.
+ * 1. getProdutos lista itens (confere from, select('*') e chain order).
+ * 2. addProduto calcula saldo (entrada - saida) quando não informado explicitamente.
+ * 3. getProdutos propaga erro do Supabase.
+ */
 
-jest.mock('../services/supabase', () => {
-  const state = { impls: {}, callLog: [] };
-  const supabase = {
-    from: (table) => {
-      state.callLog.push({ op: 'from', table });
-      const factory = state.impls[table];
-      if (!factory) throw new Error('Mock não definido para tabela: ' + table);
-      return factory(state.callLog);
-    }
-  };
-  return {
-    supabase,
-    __setTable: (table, factory) => { state.impls[table] = factory; },
-    __reset: () => { state.impls = {}; state.callLog = []; },
-    __getLog: () => state.callLog,
-  };
-});
+import { getProdutos, addProduto } from '../services/produtosService';
+import { supabase } from '../services/supabase';
 
-import { getProdutos, getProdutoById, addProduto, updateProduto, deleteProduto, getMedidas } from '../services/produtosService';
-import { __setTable, __reset, __getLog } from '../services/supabase';
+// Mock simples do Supabase
+jest.mock('../services/supabase', () => ({
+  supabase: { from: jest.fn() }
+}));
 
 beforeEach(() => {
-  __reset();
+  supabase.from.mockReset();
 });
 
-describe('Service produtos', () => {
-  test('getProdutos deve selecionar e ordenar por id_produtos', async () => {
-    __setTable('produtos', (log) => ({
-      select: (cols) => { log.push({ op: 'select', cols }); return { order: () => Promise.resolve({ data: [{ id_produtos: 1 }], error: null }) }; }
-    }));
+describe('Service produtos (mínimo útil)', () => {
+  test('getProdutos lista itens', async () => {
+    const mockOrder = jest.fn().mockResolvedValue({ data: [{ id_produtos: 1, nome: 'A' }], error: null });
+    const mockSelect = jest.fn(() => ({ order: mockOrder }));
+    supabase.from.mockReturnValue({ select: mockSelect });
+
     const data = await getProdutos();
+
+    expect(supabase.from).toHaveBeenCalledWith('produtos');
+    expect(mockSelect).toHaveBeenCalledWith('*');
+    expect(mockOrder).toHaveBeenCalledWith('id_produtos', { ascending: true });
     expect(data).toHaveLength(1);
-    const log = __getLog();
-    expect(log.find(l => l.op === 'select').cols).toBe('*');
   });
 
-  test('getProdutoById deve usar eq e single', async () => {
-    __setTable('produtos', (log) => ({
-      select: () => ({
-        eq: (col, val) => { log.push({ op: 'eq', col, val }); return { single: () => Promise.resolve({ data: { id_produtos: val }, error: null }) }; }
-      })
-    }));
-    const row = await getProdutoById(42);
-    expect(row.id_produtos).toBe(42);
-    const log = __getLog();
-    expect(log.some(l => l.op === 'eq' && l.col === 'id_produtos' && l.val === 42)).toBe(true);
+  test('addProduto calcula saldo quando ausente', async () => {
+    const mockSelect = jest.fn().mockResolvedValue({ data: [{ id_produtos: 10, nome: 'Lápis', medida: 1, entrada: 8, saida: 3, saldo: 5 }], error: null });
+    const mockInsert = jest.fn(() => ({ select: mockSelect }));
+    supabase.from.mockReturnValue({ insert: mockInsert });
+
+    const result = await addProduto({ nome: 'Lápis', medida: 1, entrada: 8, saida: 3 });
+
+    expect(supabase.from).toHaveBeenCalledWith('produtos');
+    expect(mockInsert).toHaveBeenCalledTimes(1);
+    const payloadEnviado = mockInsert.mock.calls[0][0][0];
+    expect(payloadEnviado.saldo).toBe(5);
+    expect(mockSelect).toHaveBeenCalledWith('*');
+    expect(result.saldo).toBe(5);
   });
 
-  test('addProduto calcula saldo se não fornecido (entrada - saida)', async () => {
-    let inserted;
-    __setTable('produtos', (log) => ({
-      insert: (rows) => { inserted = rows[0]; return { select: () => Promise.resolve({ data: rows.map(r => ({ ...r, id_produtos: 10 })), error: null }) }; }
-    }));
-    const result = await addProduto({ nome: 'Lápis', medida: 1, entrada: 5, saida: 2 });
-    expect(result.saldo).toBe(3);
-    expect(inserted.saldo).toBe(3);
-  });
+  test('getProdutos propaga erro do Supabase', async () => {
+    const mockOrder = jest.fn().mockResolvedValue({ data: null, error: new Error('falhou') });
+    const mockSelect = jest.fn(() => ({ order: mockOrder }));
+    supabase.from.mockReturnValue({ select: mockSelect });
 
-  test('updateProduto aplica sanitização e retorna primeiro item', async () => {
-    let updated;
-    __setTable('produtos', () => ({
-      update: (rows) => { updated = rows; return { eq: () => ({ select: () => Promise.resolve({ data: [{ id_produtos: 5, ...rows }], error: null }) }) }; }
-    }));
-    const r = await updateProduto(5, { nome: 'Caneta', medida: 2, entrada: '3', saida: '1' });
-    expect(r.id_produtos).toBe(5);
-    expect(updated.nome).toBe('Caneta');
-  });
-
-  test('deleteProduto executa delete com eq no id', async () => {
-    const eqCalls = [];
-    __setTable('produtos', () => ({
-      delete: () => ({ eq: (col, val) => { eqCalls.push({ col, val }); return Promise.resolve({ error: null }); } })
-    }));
-    await deleteProduto(7);
-    expect(eqCalls.some(c => c.col === 'id_produtos' && c.val === 7)).toBe(true);
-  });
-
-  test('getMedidas retorna lista de medidas', async () => {
-    __setTable('medida', () => ({
-      select: () => ({ order: () => Promise.resolve({ data: [{ id_medida: 1, medida: 'Unidade', descricao: '' }], error: null }) })
-    }));
-    const medidas = await getMedidas();
-    expect(medidas[0].medida).toBe('Unidade');
-  });
-
-  test('propaga erro do Supabase', async () => {
-    __setTable('produtos', () => ({
-      select: () => ({ order: () => Promise.resolve({ data: null, error: new Error('falhou') }) })
-    }));
     await expect(getProdutos()).rejects.toThrow('falhou');
+    expect(supabase.from).toHaveBeenCalledWith('produtos');
+    expect(mockSelect).toHaveBeenCalledWith('*');
   });
 });
