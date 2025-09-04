@@ -1,6 +1,17 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import CadastroProduto from '../components/CadastroProduto';
+
+// Filtra warnings de act específicos deste componente (remoção de ruído)
+const originalError = console.error;
+beforeAll(() => {
+	console.error = (...args) => {
+		if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return; // silencia apenas esse aviso
+		originalError(...args);
+	};
+});
+
+afterAll(() => { console.error = originalError; });
 
 // Mock mínimo para carregar medidas (sem foco em lógica interna)
 jest.mock('../services/supabase', () => ({
@@ -13,7 +24,7 @@ jest.mock('../services/produtosService', () => ({
 import { addProduto } from '../services/produtosService';
 
 test('renderiza inputs de todos os campos (nome, medida, local, código, data de entrada, quantidade)', async () => {
-	render(<CadastroProduto />);
+	await act(async () => { render(<CadastroProduto />); });
 	// Aguarda carregamento async das medidas para evitar warnings de act
 	await screen.findByRole('option', { name: /unidade/i });
 	expect(screen.getByLabelText(/nome/i)).toBeInTheDocument();
@@ -26,7 +37,7 @@ test('renderiza inputs de todos os campos (nome, medida, local, código, data de
 
 test('chama onSubmit com dados corretos', async () => {
 	const handleSubmit = jest.fn();
-	render(<CadastroProduto onSubmit={handleSubmit} />);
+	await act(async () => { render(<CadastroProduto onSubmit={handleSubmit} />); });
 	// Preenche
 	fireEvent.change(screen.getByLabelText(/nome/i), { target: { value: 'Livro' } });
 	await screen.findByRole('option', { name: /unidade/i });
@@ -42,9 +53,9 @@ test('chama onSubmit com dados corretos', async () => {
 	expect(handleSubmit).toHaveBeenCalledWith(expect.objectContaining({ id_produtos: 1, nome: 'Livro' }));
 });
 
-test('valida campos obrigatórios nome, medida, local, código, data e quantidade', () => {
+test('valida campos obrigatórios nome, medida, local, código, data e quantidade', async () => {
 	const handleSubmit = jest.fn();
-	render(<CadastroProduto onSubmit={handleSubmit} />);
+	await act(async () => { render(<CadastroProduto onSubmit={handleSubmit} />); });
 	fireEvent.submit(screen.getByRole('form'));
 	expect(screen.getByText(/nome é obrigatório/i)).toBeInTheDocument();
 	expect(screen.getByText(/medida é obrigatória/i)).toBeInTheDocument();
