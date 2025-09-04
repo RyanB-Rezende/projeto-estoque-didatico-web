@@ -1,3 +1,197 @@
+#!/usr/bin/env markdown
+
+# 🧪 Estratégia de Testes do Projeto
+
+Documento didático para entender COMO e POR QUE testamos aqui. Serve como suporte de aula.
+
+---
+
+## 🎯 Objetivos da Estratégia
+1. Garantir que os FLUXOS importantes funcionem (valor para o usuário).
+2. Evitar “teste por vaidade” (cobertura alta sem benefício).
+3. Manter manutenção simples (poucos testes, mas fortes).
+4. Diferenciar claramente testes **unitários** de **integração**.
+
+---
+
+## 🔍 Diferença: Teste Unitário x Teste de Integração
+
+| Tipo | O que cobre | Quando usar | Vantagens | Limitações |
+|------|-------------|-------------|-----------|------------|
+| Unitário | Uma função/módulo isolado | Lógica pura, transformação de dados, cálculos | Muito rápido, falha localizada | Não detecta problemas de integração/UX |
+| Integração (comportamental de componente) | Componente + hooks + interação + boundary do serviço (mockado) | Fluxos de tela (form, lista, ações) | Capta regressões reais, valida acessibilidade básica | Mais lento, depende de estrutura do DOM |
+
+Regra simples: se você precisa do DOM, eventos e simular uso do usuário → provavelmente é integração. Se está apenas passando parâmetros e conferindo retorno → unitário.
+
+---
+
+## 📂 Classificação dos Testes Atuais
+
+| Arquivo | Tipo | Justificativa |
+|---------|------|---------------|
+| `src/tests/authService.test.js` | Unitário | Testa lógica de login/logout isolada (mock supabase). |
+| `src/tests/produtos.service.test.js` | Unitário | Verifica funções de CRUD e cálculo de saldo com mocks. |
+| `src/tests/Login.test.js` | Integração (componente) | Interação do usuário: preencher, validar, submeter, toggle senha. |
+| `src/tests/CadastroProduto.test.js` | Integração | Form completo: validação, submit, chamada de serviço. |
+| `src/tests/ProdutoList.test.js` | Integração | Lista, remoção com confirmação, toast, paginação, refresh. |
+| `src/tests/ConfirmDialog.test.js` | Integração pontual | Fluxo confirmar vs cancelar (estado + callback). |
+
+Total atual: 6 suites / 19 testes.
+
+---
+
+## ✅ Critérios de Qualidade por Tipo
+
+### Unitário
+- Não renderiza React / DOM.
+- Todas dependências externas mockadas ou parametrizadas.
+- Foca em regras (ex: cálculo de saldo, sanitização numérica).
+- Deve executar em < 10ms por caso (regra empírica). 
+
+### Integração
+- Usa `@testing-library/react` para simular o usuário.
+- Evita acessar estados internos (usar texto, roles, aria-labels).
+- Mocka somente a borda de I/O (ex: supabase / serviço) — NÃO mocka hooks do React.
+- Garante caminho feliz + 1 erro/variante importante (não todas as permutações).
+
+---
+
+## 🧱 Padrões Adotados
+- Preferir `screen.getByRole` / `findByText` (acessibilidade primeiro).
+- Agrupar testes por fluxo, não por método privado inexistente.
+- Limpar mocks com `jest.clearAllMocks()` em `beforeEach` quando relevante.
+- Evitar snapshot: frágil e com pouco valor pedagógico aqui.
+- Reduzir warnings (ex: usar `act` onde necessário ou mock adequado).
+
+---
+
+## 🚫 Anti‑Padrões Evitados
+| Anti‑padrão | Por que evitar |
+|-------------|---------------|
+| Testar implementação (ex: estado interno) | Quebra fácil em refatorações neutras. |
+| Cobrir “cada if” mecanicamente | Não mede valor real. |
+| Excesso de mocks em cadeia | Deixa teste artificial e frágil. |
+| Snapshots gigantes | Dificultam leitura e revisão. |
+| Testar bibliotecas de terceiros | Confiamos que já são testadas pelos autores. |
+
+---
+
+## 🧪 Exemplo Comparativo
+
+### Unitário (trecho conceitual)
+```js
+import { addProduto } from '../services/produtosService';
+
+test('addProduto calcula saldo corretamente', async () => {
+  // supabase.from mockado previamente retorna sucesso
+  const novo = await addProduto({ nome: 'A', entrada: 10, saida: 3, medida: 1 });
+  expect(novo.saldo).toBe(7);
+});
+```
+
+### Integração (trecho conceitual)
+```js
+import { render, screen, fireEvent } from '@testing-library/react';
+import ProdutoList from '../components/ProdutoList';
+// getProdutos / deleteProduto mockados
+
+test('remove item após confirmação', async () => {
+  render(<ProdutoList />);
+  await screen.findByText(/lista de produtos/i);
+  fireEvent.click(screen.getAllByTitle(/remover/i)[0]);
+  fireEvent.click(screen.getByRole('button', { name: /confirmar remoção/i }));
+  await screen.findByTestId('toast');
+  expect(screen.queryByText('Caneta')).toBeNull();
+});
+```
+
+---
+
+## 🧩 Decisão: “Menos, porém Melhor”
+Focamos em proteger:
+1. Usuário consegue logar.
+2. Usuário vê a lista de produtos.
+3. Consegue cadastrar → aparece na lista.
+4. Consegue remover com segurança.
+5. Regras de serviço (saldo) não quebram em refactors.
+
+Se isso quebra, o projeto perde valor. O resto é detalhe de implementação.
+
+---
+
+## 🛠 Checklist ao Criar um Novo Teste
+1. Vou cobrir fluxo ou só repetir algo óbvio? (Se for óbvio, não teste.)
+2. O nome do teste descreve o comportamento? (ex: “mostra toast após remover”).
+3. Uso seletores acessíveis (role/text/label) em vez de `.class`?
+4. Tenho apenas o mínimo de mocks?
+5. Falha do teste apontaria causa clara? (Se não, repensar.)
+
+Se responder NÃO a ≥ 2 itens → provavelmente o teste não entra.
+
+---
+
+## ▶ Como Rodar
+Executar todos:
+```
+npm test -- --watchAll=false
+```
+Rodar só uma suite:
+```
+npm test -- --watchAll=false --testPathPattern=ProdutoList.test.js
+```
+
+---
+
+## 🚀 Próximos Passos (Opcional / Aula Avançada)
+- Introduzir testes E2E (Playwright) cobrindo login + CRUD completo.
+- Cobertura condicional só para serviços críticos.
+- Testes de acessibilidade automatizados (axe-core) em builds.
+- Mock Service Worker (MSW) para simular API real sem acoplamento.
+
+---
+
+## 💡 Resumo Didático
+Testar é escolher. Aqui escolhemos proteger o que gera valor direto para o usuário final (fluxos centrais) e a lógica que pode quebrar silenciosamente (serviços). Menos barulho = mais confiança.
+
+---
+
+## 📌 Teste Mais Complexo: `ProdutoList`
+O arquivo `ProdutoList.test.js` é o mais complexo da suíte atual. Ele cobre vários comportamentos encadeados do componente que concentram múltiplos estados e efeitos:
+
+### Por que é o mais difícil
+1. Múltiplos fluxos assíncronos
+  - Carregamento inicial (`getProdutos`).
+  - Refresh após remoção (delete → novo `getProdutos`).
+  - Refresh após criação (cadastro → manter página → atualizar lista).
+  - Aparição e desaparecimento de toasts (timeout controlado).
+2. Estados concorrentes
+  - Lista de produtos, página atual, toast, modal de cadastro, diálogo de confirmação, mapeamento de medidas.
+3. Elementos efêmeros no DOM
+  - Dialog de confirmação (entra e sai).
+  - Toast (existe por poucos segundos).
+4. Sequenciamento de mocks
+  - Ordem das respostas de `getProdutos` precisa refletir as transições (antes/depois de adicionar/remover).
+5. Risco de flakiness
+  - Necessidade de `findBy*` / `waitFor` corretos para evitar falhas intermitentes.
+6. Abrange múltiplas “categorias” de comportamento
+  - CRUD parcial (listar / adicionar / remover), UX (feedback + segurança), paginação e consistência de dados.
+
+### Comparação com outros
+| Teste | Motivo de ser mais simples |
+|-------|----------------------------|
+| Login | Apenas formulário + fluxo linear de submit. |
+| CadastroProduto | Form + validação, sem paginação/toast/diálogo. |
+| ConfirmDialog | Estado binário (aberto/fechado) + dois caminhos. |
+| Serviços (auth/produtos) | Lógica pura/isolada (unitários). |
+
+### Possível evolução ainda mais complexa
+Futuros testes E2E (ex: Playwright) cobrindo login → adicionar → paginar → remover → persistência real seriam mais complexos, pois adicionam rede real, timing e múltiplas páginas.
+
+Resumo: `ProdutoList.test.js` é um bom exemplo de teste de integração rico — valida não só a renderização, mas a orquestração de estados e efeitos que compõem a experiência completa do usuário.
+
+---
+
+Qualquer dúvida ou sugestão de novo cenário → abrir PR/discussão antes de adicionar testes.
 # Documentação Simplificada de Testes
 
 ## Objetivo
