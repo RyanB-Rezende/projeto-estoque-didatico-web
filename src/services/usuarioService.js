@@ -12,3 +12,5 @@ export const addUsuario = async () => {
     return data;
 };
 
+// import { supabase } from "./supabase";
+

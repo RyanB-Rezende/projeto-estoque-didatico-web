@@ -27,3 +27,6 @@ test ("exibe mensagem quando não há usuários", async () => {
         expect(screen.getByText(/Nenhum usuário encontrado/i)).toBeInTheDocument();
     });
 });
+
+
+// import { getUsuario } from "../services/usuarioService";

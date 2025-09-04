@@ -46,3 +46,5 @@ test('renderiza inputs de nome, email e telefone', () => {
     expect(screen.getByLabelText(/Foto/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Nascimento/i)).toBeInTheDocument();
 });
+
+// Teste 2: Atualiza o estado ao digitar nos campos

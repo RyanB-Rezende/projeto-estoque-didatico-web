@@ -19,3 +19,5 @@ const usuarioList = () => {
 };
 
 export default usuarioList;
+
+// import { getUsuario } from "../services/usuarioService";
