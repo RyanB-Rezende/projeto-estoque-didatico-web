@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 
-function CadastroUsuarios({ onSubmit }) {
-    const [form, setForm] = useState({
+export default function CadastroUsuarios ({ onSubmit = () => {} }) {
+    const [formData, setFormData] = useState({
         nome: "",
         telefone: "",
         email: "",
@@ -17,57 +17,51 @@ function CadastroUsuarios({ onSubmit }) {
     });
 
     const handleChange = (e) => {
-        const { name, value, files } = e.target;
-        setForm((prev) => ({
-            ...prev,
-            [name]: files ? files[0] : value,
-        }));
+        const { name, value, type, files } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === "file" ? files[0] : value,
+        });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (onSubmit) {
-            onSubmit({
-                ...form,
-                foto: form.foto,
-                dataNascimento: form.dataNascimento,
-            });
-        }
+        onSubmit(formData);
     };
 
-    return (
-       <form onSubmit={handleSubmit} aria-label="formulario">
+return (
+        <form role="form" aria-label="formulario" onSubmit={handleSubmit}>
             <label>
                 Nome
-                <input name="nome" value={form.nome} onChange={handleChange} />
+                <input name="nome" value={formData.nome} onChange={handleChange} />
             </label>
             <label>
                 Telefone
-                <input name="telefone" value={form.telefone} onChange={handleChange} />
+                <input name="telefone" value={formData.telefone} onChange={handleChange} />
             </label>
             <label>
                 Email
-                <input name="email" value={form.email} onChange={handleChange} />
+                <input name="email" value={formData.email} onChange={handleChange} />
             </label>
             <label>
                 Endereço
-                <input name="endereco" value={form.endereco} onChange={handleChange} />
+                <input name="endereco" value={formData.endereco} onChange={handleChange} />
             </label>
             <label>
                 Cargo
-                <input name="cargo" value={form.cargo} onChange={handleChange} />
+                <input name="cargo" value={formData.cargo} onChange={handleChange} />
             </label>
             <label>
                 Senha
-                <input name="senha" type="password" value={form.senha} onChange={handleChange} />
+                <input name="senha" type="password" value={formData.senha} onChange={handleChange} />
             </label>
             <label>
                 Turma
-                <input name="turma" value={form.turma} onChange={handleChange} />
+                <input name="turma" value={formData.turma} onChange={handleChange} />
             </label>
             <label>
                 Cpf
-                <input name="cpf" value={form.cpf} onChange={handleChange} />
+                <input name="cpf" value={formData.cpf} onChange={handleChange} />
             </label>
             <label>
                 Foto
@@ -75,11 +69,9 @@ function CadastroUsuarios({ onSubmit }) {
             </label>
             <label>
                 Nascimento
-                <input name="dataNascimento" type="date" value={form.dataNascimento} onChange={handleChange} />
+                <input name="dataNascimento" type="date" value={formData.dataNascimento} onChange={handleChange} />
             </label>
             <button type="submit">Salvar</button>
         </form>
     );
-}
-
-export default CadastroUsuarios;
+};

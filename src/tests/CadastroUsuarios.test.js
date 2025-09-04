@@ -14,11 +14,10 @@ test("chama onSubmit com dados corretos", () => {
     fireEvent.change(screen.getByLabelText(/Turma/i), { target: { value: "Turma 1" } });
     fireEvent.change(screen.getByLabelText(/Cpf/i), { target: { value: "123.456.789-00" } });
     fireEvent.change(screen.getByLabelText(/Foto/i), { target: { files: [new File([], "foto.png")] } });
-    fireEvent.change(screen.getByLabelText(/Nascimento/i), { target: { value: "2000-01-01" } });
+  fireEvent.change(screen.getByLabelText(/Nascimento/i), { target: { value: "2000-01-01" } });
 
 fireEvent.submit(screen.getByRole("form", { name: "formulario" }));
-
-    // Aguarda o submit ser chamado (caso seja assíncrono)
+  
     expect(handleSubmit).toHaveBeenCalledWith({
         nome: "João",
         telefone: "123456789",
