@@ -8,7 +8,6 @@
  * intencionalmente removidos conforme diretriz de simplificação.
  */
 
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Login from '../components/auth/Login';
@@ -51,5 +50,23 @@ describe('Login (mínimo útil)', () => {
       expect(login).toHaveBeenCalledWith('user@test.com', 'Secr3t!');
       expect(onSuccess).toHaveBeenCalledWith(fakeSession);
     });
+  });
+
+  test('toggle de mostrar/ocultar senha altera tipo e ícone', () => {
+    render(<Login />);
+    const senhaInput = screen.getByLabelText(/^senha$/i);
+    // Inicialmente senha escondida
+    expect(senhaInput).toHaveAttribute('type', 'password');
+    const toggleBtn = screen.getByRole('button', { name: /mostrar senha/i });
+    const iconBefore = toggleBtn.querySelector('i');
+    expect(iconBefore.className).toMatch(/eye-slash/); // olho fechado indicando escondido
+
+    // Clica para mostrar
+    fireEvent.click(toggleBtn);
+    expect(senhaInput).toHaveAttribute('type', 'text');
+    const toggleBtnAfter = screen.getByRole('button', { name: /ocultar senha/i });
+    const iconAfter = toggleBtnAfter.querySelector('i');
+    expect(iconAfter.className).toMatch(/bi-eye(\s|$)/); // ícone olho aberto
+    expect(iconAfter.className).not.toMatch(/eye-slash/);
   });
 });

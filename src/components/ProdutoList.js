@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getProdutos, deleteProduto, getMedidas } from '../services/produtosService';
+import ConfirmDialog from './ConfirmDialog';
 import CadastroProduto from './CadastroProduto';
 
 // Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
@@ -17,6 +18,7 @@ export default function ProdutoList() {
 	const [page, setPage] = useState(1);
 	const [toast, setToast] = useState(null); // {msg, variant}
 	const [medidasMap, setMedidasMap] = useState({}); // { id: nome }
+	const [confirming, setConfirming] = useState(null); // produto sendo confirmado para remoção
 	const PAGE_SIZE = 25; // quantidade de produtos por página (ajuste conforme necessidade)
 
 	// Carrega produtos (pode ser chamado para refresh silencioso)
@@ -64,13 +66,24 @@ export default function ProdutoList() {
 		if (page > totalPages) setPage(totalPages);
 	}, [produtos, page]);
 
-	const handleDelete = async (p) => {
+	const performDelete = async (p) => {
 		try {
 			await deleteProduto(p.id_produtos);
 			// Refresh para garantir consistência (ex: remoção em backend com triggers)
 			await loadProdutos();
+			showToast(`Produto "${p.nome}" removido`, 'danger');
 		} catch (e) {
 			// Erro silencioso mínimo
+		}
+	};
+
+	const requestDelete = (p) => setConfirming(p);
+	const cancelDelete = () => setConfirming(null);
+	const confirmDelete = async () => {
+		if (confirming) {
+			const target = confirming;
+			setConfirming(null);
+			await performDelete(target);
 		}
 	};
 
@@ -82,9 +95,8 @@ export default function ProdutoList() {
 	const handleAddSuccess = async (novo) => {
 		setShowAdd(false);
 		showToast(`Produto "${novo?.nome || 'Novo'}" cadastrado`, 'success');
-		// Recarrega a lista (garante dados oficiais)
+		// Recarrega mantendo a página atual; se nova página final surgir o user pode navegar manualmente
 		await loadProdutos();
-		setPage(1); // volta para primeira página para ver novo item
 	};
 
 	const headerStyles = {
@@ -107,7 +119,33 @@ export default function ProdutoList() {
 	}
 
 	if (!produtos.length) {
-		return <div className="container alert alert-info my-3" role="alert">Nenhum produto cadastrado.</div>;
+		return <>
+			<div className="container alert alert-info my-3" role="alert">Nenhum produto cadastrado.</div>
+			{toast && (
+				<div
+					role="status"
+					aria-live="polite"
+					data-testid="toast" data-variant={toast.variant}
+					style={{
+						position: 'fixed',
+						top: '10px',
+						left: '50%',
+						transform: 'translate(-50%, 0)',
+						background: toast.variant === 'success' ? '#198754' : toast.variant === 'danger' ? '#dc3545' : '#6c757d',
+						color: '#fff',
+						padding: '8px 16px',
+						borderRadius: '8px',
+						boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+						fontSize: '0.85rem',
+						zIndex: 4000,
+						animation: 'fadeSlide .45s ease'
+					}}
+				>
+					{toast.msg}
+					<style>{`@keyframes fadeSlide { from { opacity:0; transform:translate(-50%,-8px);} to { opacity:1; transform:translate(-50%,0);} }`}</style>
+				</div>
+			)}
+		</>;
 	}
 
 		// Paginação simples: determina fatia e total
@@ -123,6 +161,7 @@ export default function ProdutoList() {
 		};
 
 		return (
+		<>
 		<div className="container mt-3">
 			{/* Header estilizado */}
 			<div style={headerStyles} className="mb-3 shadow-sm">
@@ -160,7 +199,7 @@ export default function ProdutoList() {
 											type="button"
 											className="btn btn-outline-danger btn-sm"
 											title="Remover"
-											onClick={() => handleDelete(p)}
+																		onClick={() => requestDelete(p)}
 										>
 											<i className="bi bi-trash"></i>
 										</button>
@@ -185,7 +224,7 @@ export default function ProdutoList() {
 										<button
 											className="btn btn-outline-danger btn-sm"
 											aria-label={`Remover ${p.nome}`}
-											onClick={() => handleDelete(p)}
+																		onClick={() => requestDelete(p)}
 										>
 											<i className="bi bi-trash"></i>
 										</button>
@@ -243,7 +282,7 @@ export default function ProdutoList() {
 										top: '10px',
 										left: '50%',
 										transform: 'translate(-50%, 0)',
-										background: toast.variant === 'success' ? '#198754' : '#6c757d',
+										background: toast.variant === 'success' ? '#198754' : toast.variant === 'danger' ? '#dc3545' : '#6c757d',
 										color: '#fff',
 										padding: '8px 16px',
 										borderRadius: '8px',
@@ -252,12 +291,23 @@ export default function ProdutoList() {
 										zIndex: 4000,
 										animation: 'fadeSlide .45s ease'
 									}}
-								>
+								data-testid="toast" data-variant={toast.variant}>
 									{toast.msg}
 									<style>{`@keyframes fadeSlide { from { opacity:0; transform:translate(-50%,-8px);} to { opacity:1; transform:translate(-50%,0);} }`}</style>
 								</div>
 							)}
 		</div>
+		{confirming && (
+			<ConfirmDialog
+				title="Remover Produto"
+				message={<span>Tem certeza que deseja remover <strong>{confirming.nome}</strong>? Essa ação não pode ser desfeita.</span>}
+				confirmLabel="Remover"
+				cancelLabel="Cancelar"
+				onCancel={cancelDelete}
+				onConfirm={confirmDelete}
+			/>
+		)}
+	</>
 	);
 }
 

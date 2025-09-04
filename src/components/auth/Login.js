@@ -71,7 +71,7 @@ export default function Login({ onSuccess }) {
                       <span className="input-group-text bg-white"><i className="bi bi-lock text-primary" aria-hidden="true" /></span>
                       <input id="senha" name="senha" type={showPassword ? 'text' : 'password'} className="form-control" placeholder="Senha" autoComplete="current-password" value={senha} onChange={e=>setSenha(e.target.value)} aria-invalid={!!errors.senha} onKeyDown={e=>{ if(e.key==='Enter'){ handleSubmit(e); } }} />
                       <button type="button" className="btn btn-outline-secondary" onClick={()=>setShowPassword(s=>!s)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'}>
-                        <i className={showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'} aria-hidden="true" />
+                        <i className={showPassword ? 'bi bi-eye' : 'bi bi-eye-slash'} aria-hidden="true" />
                       </button>
                     </div>
                     {errors.senha && <div className="text-danger small fw-semibold mt-1" role="alert">{errors.senha}</div>}
