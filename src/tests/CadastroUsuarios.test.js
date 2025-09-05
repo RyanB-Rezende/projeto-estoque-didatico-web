@@ -1,36 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CadastroUsuarios from "../components/CadastroUsuarios";
 
-test("chama onSubmit com dados corretos", () => {
-    const handleSubmit = jest.fn();
-    render(<CadastroUsuarios onSubmit={handleSubmit} />);
 
-    fireEvent.change(screen.getByLabelText(/Nome/i), { target: { value: "João" } });
-    fireEvent.change(screen.getByLabelText(/Telefone/i), { target: { value: "123456789" } });
-    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "joao@email.com" } });
-    fireEvent.change(screen.getByLabelText(/Endereço/i), { target: { value: "Rua A, 123" } });
-    fireEvent.change(screen.getByLabelText(/Cargo/i), { target: { value: "Desenvolvedor" } });
-    fireEvent.change(screen.getByLabelText(/Senha/i), { target: { value: "senha123" } });
-    fireEvent.change(screen.getByLabelText(/Turma/i), { target: { value: "Turma 1" } });
-    fireEvent.change(screen.getByLabelText(/Cpf/i), { target: { value: "123.456.789-00" } });
-    fireEvent.change(screen.getByLabelText(/Foto/i), { target: { files: [new File([], "foto.png")] } });
-  fireEvent.change(screen.getByLabelText(/Nascimento/i), { target: { value: "2000-01-01" } });
-
-fireEvent.submit(screen.getByRole("form", { name: "formulario" }));
-  
-    expect(handleSubmit).toHaveBeenCalledWith({
-        nome: "João",
-        telefone: "123456789",
-        email: "joao@email.com",
-        endereco: "Rua A, 123",
-        cargo: "Desenvolvedor",
-        senha: "senha123",
-        turma: "Turma 1",
-        cpf: "123.456.789-00",
-        foto: expect.any(File),
-        dataNascimento: "2000-01-01",
-    });
-});
 
 // Teste 1: Renderiza os campos de entrada
 test('renderiza inputs de nome, email e telefone', () => {
@@ -47,4 +18,51 @@ test('renderiza inputs de nome, email e telefone', () => {
     expect(screen.getByLabelText(/Nascimento/i)).toBeInTheDocument();
 });
 
-// Teste 2: Atualiza o estado ao digitar nos campos
+
+jest.mock('../supabaseClient.js', () => ({
+  supabase: {
+    from: () => ({
+      insert: async () => ({ data: {}, error: null })
+    })
+  }
+}));
+
+test("chama onSubmit com dados corretos", async () => {
+  const handleSubmit = jest.fn();
+  render(<CadastroUsuarios onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/Nome/i), { target: { value: "João" } });
+    fireEvent.change(screen.getByLabelText(/Telefone/i), { target: { value: "123456789" } });
+    fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: "joao@email.com" } });
+    fireEvent.change(screen.getByLabelText(/Endereço/i), { target: { value: "Rua A, 123" } });
+    fireEvent.change(screen.getByLabelText(/Cargo/i), { target: { value: "Desenvolvedor" } });
+    fireEvent.change(screen.getByLabelText(/Senha/i), { target: { value: "senha123" } });
+    fireEvent.change(screen.getByLabelText(/Turma/i), { target: { value: "Turma 1" } });
+    fireEvent.change(screen.getByLabelText(/Cpf/i), { target: { value: "123.456.789-00" } });
+    fireEvent.change(screen.getByLabelText(/Foto/i), { target: { files: [new File([], "foto.png")] } });
+  fireEvent.change(screen.getByLabelText(/Nascimento/i), { target: { value: "2000-01-01" } });
+
+fireEvent.submit(screen.getByTestId("form"));
+  
+  await waitFor(() =>
+    expect(handleSubmit).toHaveBeenCalledWith({
+      nome: "João",
+      telefone: "123456789",
+      email: "joao@email.com",
+      endereco: "Rua A, 123",
+      cargo: "Desenvolvedor",
+      senha: "senha123",
+      turma: "Turma 1",
+      cpf: "123.456.789-00",
+      foto: expect.any(File),
+      dataNascimento: "2000-01-01",
+    })
+  );
+});
+
+// Teste 1: Renderiza os campos de entrada
+
+
+
+
+

@@ -1,16 +1,22 @@
-import { supabase } from "@supabase/supabase-js";
+import { supabase } from "../supabase"; // ← Corrija o import
 
-export const getUsuario = async () => {
-    const {data, error} = await supabase.from('usuarios').select("*");
+export const getUsuarios = async () => {
+    const {data, error} = await supabase.from('usuarios').select(`
+        *,
+        cargos (*)
+    `);
     if (error) throw error;
     return data;
 };
 
-export const addUsuario = async () => {
-    const {data, error} = await supabase.from('usuarios').select("*");
+export const addUsuario = async (usuarioData) => {
+    const {data, error} = await supabase.from('usuarios').insert([usuarioData]).select();
     if (error) throw error;
     return data;
 };
 
-// import { supabase } from "./supabase";
-
+export const getCargos = async () => {
+    const {data, error} = await supabase.from('cargos').select("*");
+    if (error) throw error;
+    return data;
+};
