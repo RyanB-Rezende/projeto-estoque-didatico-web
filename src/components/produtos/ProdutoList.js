@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getProdutos, deleteProduto, getMedidas } from '../../services/produtos/produtosService';
 import ConfirmDialog from '../common/ConfirmDialog';
 import CadastroProduto from './CadastroProduto';
+import EditarProduto from './EditarProduto';
 import SearchBar from '../common/SearchBar';
 
 // Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
@@ -21,6 +22,7 @@ export default function ProdutoList() {
 	const [toast, setToast] = useState(null); // {msg, variant}
 	const [medidasMap, setMedidasMap] = useState({}); // { id: nome }
 	const [confirming, setConfirming] = useState(null); // produto sendo confirmado para remoção
+	const [editing, setEditing] = useState(null); // produto sendo editado
 	const PAGE_SIZE = 25; // quantidade de produtos por página (ajuste conforme necessidade)
 
 	// Carrega produtos (pode ser chamado para refresh silencioso)
@@ -98,6 +100,12 @@ export default function ProdutoList() {
 		setShowAdd(false);
 		showToast(`Produto "${novo?.nome || 'Novo'}" cadastrado`, 'success');
 		// Recarrega mantendo a página atual; se nova página final surgir o user pode navegar manualmente
+		await loadProdutos();
+	};
+
+	const handleEditSuccess = async (atualizado) => {
+		setEditing(null);
+		showToast(`Produto "${atualizado?.nome || 'Atualizado'}" atualizado`, 'success');
 		await loadProdutos();
 	};
 
@@ -211,23 +219,31 @@ export default function ProdutoList() {
 						</tr>
 					</thead>
 						<tbody>
-							{visible.map(p => (
-								<tr key={p.id_produtos}>
-									<td><strong>{p.nome}</strong></td>
-									<td>{medidasMap[p.medida] || p.medida}</td>
-									<td>{p.saldo}</td>
-									<td className="text-end">
-										<button
-											type="button"
-											className="btn btn-outline-danger btn-sm"
-											title="Remover"
-																		onClick={() => requestDelete(p)}
-										>
-											<i className="bi bi-trash"></i>
-										</button>
-									</td>
-								</tr>
-							))}
+								{visible.map(p => (
+									<tr key={p.id_produtos}>
+										<td><strong>{p.nome}</strong></td>
+										<td>{medidasMap[p.medida] || p.medida}</td>
+										<td>{p.saldo}</td>
+										<td className="text-end d-flex justify-content-end gap-2">
+											<button
+												type="button"
+												className="btn btn-outline-primary btn-sm"
+												title="Editar"
+												onClick={() => setEditing(p)}
+											>
+												<i className="bi bi-pencil"></i>
+											</button>
+											<button
+												type="button"
+												className="btn btn-outline-danger btn-sm"
+												title="Remover"
+												onClick={() => requestDelete(p)}
+											>
+												<i className="bi bi-trash"></i>
+											</button>
+										</td>
+									</tr>
+								))}
 						</tbody>
 				</table>
 			</div>
@@ -243,13 +259,22 @@ export default function ProdutoList() {
 											<div className="fw-semibold small mb-1">{p.nome}</div>
 											<div className="text-muted small">Saldo: {p.saldo}</div>
 										</div>
-										<button
-											className="btn btn-outline-danger btn-sm"
-											aria-label={`Remover ${p.nome}`}
-																		onClick={() => requestDelete(p)}
-										>
-											<i className="bi bi-trash"></i>
-										</button>
+										<div className="d-flex gap-2">
+											<button
+												className="btn btn-outline-primary btn-sm"
+												aria-label={`Editar ${p.nome}`}
+												onClick={() => setEditing(p)}
+											>
+												<i className="bi bi-pencil"></i>
+											</button>
+											<button
+												className="btn btn-outline-danger btn-sm"
+												aria-label={`Remover ${p.nome}`}
+												onClick={() => requestDelete(p)}
+											>
+												<i className="bi bi-trash"></i>
+											</button>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -266,6 +291,16 @@ export default function ProdutoList() {
 							style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:2000, display:'flex', alignItems:'center', justifyContent:'center'}}
 						>
 							<CadastroProduto asModal={false} onSubmit={handleAddSuccess} onCancel={()=>setShowAdd(false)} />
+						</div>
+					)}
+
+					{editing && (
+						<div
+							role="dialog"
+							aria-modal="true"
+							style={{position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:2100, display:'flex', alignItems:'center', justifyContent:'center'}}
+						>
+							<EditarProduto id={editing.id_produtos} asModal={false} onSuccess={handleEditSuccess} onCancel={()=>setEditing(null)} />
 						</div>
 					)}
 

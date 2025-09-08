@@ -5,11 +5,11 @@
  * 3. getProdutos propaga erro do Supabase.
  */
 
-import { getProdutos, addProduto } from '../services/produtosService';
-import { supabase } from '../services/supabase';
+import { getProdutos, addProduto, updateProduto } from '../../services/produtos/produtosService';
+import { supabase } from '../../services/supabase/supabase';
 
 // Mock simples do Supabase
-jest.mock('../services/supabase', () => ({
+jest.mock('../../services/supabase/supabase', () => ({
   supabase: { from: jest.fn() }
 }));
 
@@ -54,5 +54,23 @@ describe('Service produtos (mínimo útil)', () => {
     await expect(getProdutos()).rejects.toThrow('falhou');
     expect(supabase.from).toHaveBeenCalledWith('produtos');
     expect(mockSelect).toHaveBeenCalledWith('*');
+  });
+
+  test('updateProduto calcula saldo quando ausente e sanitiza campos', async () => {
+    const mockSelect = jest.fn().mockResolvedValue({ data: [{ id_produtos: 55, nome: 'Item', medida: 2, entrada: 10, saida: 3, saldo: 7, local: 'Lab', codigo: 'COD' }], error: null });
+    const mockEq = jest.fn(() => ({ select: mockSelect }));
+    const mockUpdate = jest.fn(() => ({ eq: mockEq }));
+    supabase.from.mockReturnValue({ update: mockUpdate });
+
+    const result = await updateProduto(55, { nome: '  Item  ', medida: '2', entrada: '10', saida: '3', local: ' Lab ', codigo: 'COD', saldo: undefined, foo: 'bar' });
+
+    expect(supabase.from).toHaveBeenCalledWith('produtos');
+    expect(mockUpdate).toHaveBeenCalledTimes(1);
+    const payload = mockUpdate.mock.calls[0][0];
+    expect(payload).toMatchObject({ nome: 'Item', medida: 2, entrada: 10, saida: 3, saldo: 7, local: 'Lab', codigo: 'COD' });
+    expect(payload).not.toHaveProperty('foo');
+    expect(mockEq).toHaveBeenCalledWith('id_produtos', 55);
+    expect(mockSelect).toHaveBeenCalledWith('*');
+    expect(result.saldo).toBe(7);
   });
 });

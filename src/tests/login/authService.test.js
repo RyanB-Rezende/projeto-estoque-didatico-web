@@ -10,13 +10,13 @@
 import '@testing-library/jest-dom';
 
 // Mock do supabase para testes de login baseado em tabela usuarios
-jest.mock('../services/supabase', () => ({
+jest.mock('../../services/supabase/supabase', () => ({
   supabase: { from: jest.fn() }
 }));
 
 // Import da API real após mocks
-import { login, logout, getSession, isAuthenticated } from '../services/authService';
-import { supabase } from '../services/supabase';
+import { login, logout, getSession, isAuthenticated } from '../../services/login/authService';
+import { supabase } from '../../services/supabase/supabase';
 
 // Helper para limpar localStorage entre testes
 const clearStorage = () => {

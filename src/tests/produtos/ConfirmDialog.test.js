@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React, { useState } from 'react';
-import ConfirmDialog from '../components/ConfirmDialog';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 // Wrapper de integração que simula uma lista simples com remoção confirmada
 function ListaComConfirmacao() {
