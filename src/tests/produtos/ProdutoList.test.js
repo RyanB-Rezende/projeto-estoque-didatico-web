@@ -1,16 +1,14 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 
 // Service de produtos a ser mockado
-import * as service from '../services/produtosService';
-// Componente (ainda não implementado) -> Testes RED
-import ProdutoList from '../components/ProdutoList';
+import * as service from '../../services/produtos/produtosService';
+import ProdutoList from '../../components/produtos/ProdutoList';
 
-jest.mock('../services/produtosService');
+jest.mock('../../services/produtos/produtosService');
 
 // Mock de CadastroProduto para acionar onSubmit automaticamente ao abrir modal
-jest.mock('../components/CadastroProduto', () => {
+jest.mock('../../components/produtos/CadastroProduto', () => {
   const React = require('react');
   return function StubCadastro(props) {
     React.useEffect(() => {
@@ -21,8 +19,8 @@ jest.mock('../components/CadastroProduto', () => {
   };
 });
 
-// Helper opcional para envolver em router (preparado caso futuro use links)
-const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
+// Render simples (sem router pois componente atual não usa rotas)
+const renderPlain = (ui) => render(ui);
 
 beforeAll(() => {
   jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -39,7 +37,7 @@ afterAll(() => {
 // 1. Mensagem quando lista vazia
 test('exibe mensagem quando não há produtos cadastrados', async () => {
   service.getProdutos.mockResolvedValue([]);
-  renderWithRouter(<ProdutoList />);
+  renderPlain(<ProdutoList />);
   const message = await screen.findByText(/nenhum produto cadastrado/i);
   expect(message).toBeInTheDocument();
 });
@@ -50,7 +48,7 @@ test('exibe lista de produtos', async () => {
     { id_produtos: '1', nome: 'Caneta', medida: 1, entrada: 10, saida: 2, saldo: 8 },
     { id_produtos: '2', nome: 'Lápis', medida: 1, entrada: 5, saida: 0, saldo: 5 },
   ]);
-  renderWithRouter(<ProdutoList />);
+  renderPlain(<ProdutoList />);
   await waitFor(() => {
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText(/lista de produtos/i)).toBeInTheDocument();
@@ -71,7 +69,7 @@ test('confirmação antes de deletar: cancelar não remove, confirmar remove e m
 
   const deleteMock = service.deleteProduto.mockResolvedValue({});
 
-  renderWithRouter(<ProdutoList />);
+  renderPlain(<ProdutoList />);
   await screen.findByText(/lista de produtos/i);
   expect(screen.getAllByText('Caneta').length).toBeGreaterThan(0);
 
@@ -121,7 +119,7 @@ test('atualiza lista após cadastro de novo produto (refresh)', async () => {
   // addProduto retorna o objeto criado
   service.addProduto = jest.fn().mockResolvedValue({ id_produtos: '99', nome: 'Borracha', medida: 1, entrada: 5, saida: 0, saldo: 5 });
 
-  renderWithRouter(<ProdutoList />);
+  renderPlain(<ProdutoList />);
 
   // Lista inicial
   await screen.findByText(/lista de produtos/i);
@@ -160,7 +158,7 @@ test('navega para a próxima página ao clicar no botão de avançar', async () 
     .mockResolvedValueOnce(produtos)
     .mockResolvedValueOnce(produtos);
 
-  renderWithRouter(<ProdutoList />);
+  renderPlain(<ProdutoList />);
 
   // Espera primeira página
   await waitFor(() => {

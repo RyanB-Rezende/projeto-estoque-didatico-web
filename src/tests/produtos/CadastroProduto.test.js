@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import CadastroProduto from '../components/CadastroProduto';
+import CadastroProduto from '../../components/produtos/CadastroProduto';
 
 // Filtra warnings de act específicos deste componente (remoção de ruído)
 const originalError = console.error;
@@ -14,14 +14,14 @@ beforeAll(() => {
 afterAll(() => { console.error = originalError; });
 
 // Mock mínimo para carregar medidas (sem foco em lógica interna)
-jest.mock('../services/supabase', () => ({
+jest.mock('../../services/supabase/supabase', () => ({
 	supabase: { from: () => ({ select: () => ({ order: () => Promise.resolve({ data: [ { id_medida: 1, medida: 'Unidade' } ], error: null }) }) }) }
 }));
 
-jest.mock('../services/produtosService', () => ({
+jest.mock('../../services/produtos/produtosService', () => ({
 	addProduto: jest.fn(async (dados) => ({ id_produtos: 1, ...dados }))
 }));
-import { addProduto } from '../services/produtosService';
+import { addProduto } from '../../services/produtos/produtosService';
 
 test('renderiza inputs de todos os campos (nome, medida, local, código, data de entrada, quantidade)', async () => {
 	await act(async () => { render(<CadastroProduto />); });

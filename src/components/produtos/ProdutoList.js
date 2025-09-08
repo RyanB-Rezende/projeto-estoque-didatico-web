@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getProdutos, deleteProduto, getMedidas } from '../../services/produtos/produtosService';
 import ConfirmDialog from '../common/ConfirmDialog';
 import CadastroProduto from './CadastroProduto';
+import SearchBar from '../common/SearchBar';
 
 // Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
 // Requisitos cobertos pelos testes:
@@ -12,6 +13,7 @@ import CadastroProduto from './CadastroProduto';
 
 export default function ProdutoList() {
 	const [produtos, setProdutos] = useState([]);
+	const [searchTerm, setSearchTerm] = useState('');
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [showAdd, setShowAdd] = useState(false);
@@ -108,7 +110,6 @@ export default function ProdutoList() {
 		alignItems: 'center',
 		gap: '14px'
 	};
-	const addBtnCls = 'btn btn-sm d-flex align-items-center gap-1';
 
 	if (loading) {
 		return <div className="text-center py-4">Carregando...</div>;
@@ -148,10 +149,17 @@ export default function ProdutoList() {
 		</>;
 	}
 
-		// Paginação simples: determina fatia e total
-		const totalPages = Math.max(1, Math.ceil(produtos.length / PAGE_SIZE));
+		// Aplica filtro de busca (case-insensitive) antes da paginação
+		const filtered = searchTerm
+			? produtos.filter(p => (p.nome || '').toLowerCase().includes(searchTerm.toLowerCase()))
+			: produtos;
+
+		// Paginação simples: determina fatia e total com base na lista filtrada
+		const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 		const start = (page - 1) * PAGE_SIZE;
-		const visible = produtos.slice(start, start + PAGE_SIZE);
+		const visible = filtered.slice(start, start + PAGE_SIZE);
+
+		const noFilteredResults = filtered.length === 0 && produtos.length > 0;
 		const goTo = async (p) => {
 			if (p >= 1 && p <= totalPages && p !== page) {
 				setPage(p);
@@ -166,17 +174,31 @@ export default function ProdutoList() {
 			{/* Header estilizado */}
 			<div style={headerStyles} className="mb-3 shadow-sm">
 				<h2 className="h6 mb-0 flex-grow-1" style={{letterSpacing:'0.4px'}}>Lista de Produtos</h2>
-				<span className="badge rounded-pill bg-light text-dark">{produtos.length}</span>
+			</div>
+
+			{/* Barra de busca com botão adicionar alinhado à direita (estilo card arredondado) */}
+			<div className="mb-3" style={{background:'#ffffff', borderRadius:'30px', padding:'10px 18px', boxShadow:'0 1px 3px rgba(0,0,0,0.08)', display:'flex', alignItems:'center', gap:'12px'}}>
+				<div className="flex-grow-1">
+					<SearchBar
+						placeholder="Procurar produtos..."
+						onSearch={setSearchTerm}
+						showAddButton={false}
+					/>
+				</div>
 				<button
 					type="button"
-					className={addBtnCls + ' btn-warning fw-semibold'}
-					style={{border:'none', borderRadius:'32px', padding:'6px 14px'}}
+					className="btn btn-warning fw-semibold rounded-4 px-4 d-flex align-items-center"
+					style={{height:'48px'}}
 					onClick={() => setShowAdd(true)}
 					aria-label="Adicionar produto"
 				>
-					<i className="bi bi-plus-circle-fill"></i> <span className="d-none d-sm-inline">Adicionar</span>
+					<span style={{fontSize:'0.85rem'}}>Adicionar</span>
 				</button>
 			</div>
+
+			{noFilteredResults && (
+				<div className="alert alert-warning py-2" role="status">Nenhum produto encontrado para "{searchTerm}"</div>
+			)}
 
 			<div className="table-responsive d-none d-md-block">
 				<table className="table table-sm table-hover align-middle">
@@ -236,7 +258,7 @@ export default function ProdutoList() {
 				</div>
 			</div>
 
-			{/* Modal sobreposto para adicionar produto (sem search/pdf ainda) */}
+			{/* Modal sobreposto para adicionar produto */}
 					{showAdd && (
 						<div
 							role="dialog"

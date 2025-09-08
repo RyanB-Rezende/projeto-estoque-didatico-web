@@ -10,12 +10,12 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Login from '../components/auth/Login';
+import Login from '../../components/login/Login';
 
-jest.mock('../services/authService', () => ({
+jest.mock('../../services/login/authService', () => ({
   login: jest.fn()
 }));
-import { login } from '../services/authService';
+import { login } from '../../services/login/authService';
 
 beforeEach(() => {
   jest.clearAllMocks();
