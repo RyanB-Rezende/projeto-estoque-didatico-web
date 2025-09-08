@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import './App.css';
-import Login from './components/auth/Login';
-import ProdutoList from './components/ProdutoList';
-import { logout, isAuthenticated } from './services/authService';
+import Login from './components/login/Login';
+import ProdutoList from './components/produtos/ProdutoList';
+import { logout, isAuthenticated } from './services/login/authService';
 
 function App() {
   const [session, setSession] = useState(null);
