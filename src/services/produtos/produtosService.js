@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from '../supabase/supabase';
 
 // Helper para sanitizar e preparar objeto antes de enviar ao banco
 const sanitizeProduto = (produto) => {

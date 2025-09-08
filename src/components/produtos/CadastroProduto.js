@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
-import { addProduto } from '../services/produtosService';
+import { supabase } from '../../services/supabase/supabase';
+import { addProduto } from '../../services/produtos/produtosService';
 
 // Função de domínio (será expandida com persistência Supabase em testes futuros)
 // Regras atuais (dirigidas por testes):

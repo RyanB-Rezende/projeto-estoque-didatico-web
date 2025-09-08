@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { login as loginService } from '../../services/authService';
+import { login as loginService } from '../../services/login/authService';
 import logoImg from '../../senac.png';
 
 // Notas:

@@ -5,7 +5,7 @@
 //  - getSession()
 //  - isAuthenticated()
 
-import { supabase } from './supabase';
+import { supabase } from '../supabase/supabase';
 
 const STORAGE_KEY = 'auth_session';
 let currentSession = null;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getProdutos, deleteProduto, getMedidas } from '../services/produtosService';
-import ConfirmDialog from './ConfirmDialog';
+import { getProdutos, deleteProduto, getMedidas } from '../../services/produtos/produtosService';
+import ConfirmDialog from '../common/ConfirmDialog';
 import CadastroProduto from './CadastroProduto';
 
 // Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
