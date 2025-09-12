@@ -5,7 +5,7 @@
  * 3. getProdutos propaga erro do Supabase.
  */
 
-import { getProdutos, addProduto, updateProduto } from '../../services/produtos/produtosService';
+import { getProdutos, addProduto, updateProduto, getProdutoById, deleteProduto, getMedidas } from '../../services/produtos/produtosService';
 import { supabase } from '../../services/supabase/supabase';
 
 // Mock simples do Supabase
@@ -72,5 +72,43 @@ describe('Service produtos (mínimo útil)', () => {
     expect(mockEq).toHaveBeenCalledWith('id_produtos', 55);
     expect(mockSelect).toHaveBeenCalledWith('*');
     expect(result.saldo).toBe(7);
+  });
+
+  test('getProdutoById, deleteProduto e getMedidas (fluxo combinado)', async () => {
+    // Mock encadeado para getProdutoById
+    const mockSingle = jest.fn().mockResolvedValue({ data: { id_produtos: 77, nome: 'Caderno' }, error: null });
+    const mockSelectSingle = jest.fn(() => ({ eq: jest.fn(() => ({ single: mockSingle })) }));
+
+    // Mock para deleteProduto
+    const mockEqDelete = jest.fn().mockResolvedValue({ error: null });
+    const mockDelete = jest.fn(() => ({ eq: mockEqDelete }));
+
+    // Mock para getMedidas
+    const mockOrderMedidas = jest.fn().mockResolvedValue({ data: [ { id_medida: 1, medida: 'UN' } ], error: null });
+   const mockSelectMedidas = jest.fn(() => ({ order: mockOrderMedidas }));
+
+    // Implementação diferenciada de supabase.from conforme tabela
+    supabase.from.mockImplementation((table) => {
+      if (table === 'produtos') {
+        return { select: mockSelectSingle, delete: mockDelete };
+      }
+      if (table === 'medida') {
+        return { select: mockSelectMedidas };
+      }
+      return {};
+    });
+
+    const byId = await getProdutoById(77);
+    expect(byId).toMatchObject({ id_produtos: 77, nome: 'Caderno' });
+    expect(mockSelectSingle).toHaveBeenCalledWith('*');
+
+    await deleteProduto(77);
+    expect(mockDelete).toHaveBeenCalledTimes(1);
+    expect(mockEqDelete).toHaveBeenCalledWith('id_produtos', 77);
+
+    const medidas = await getMedidas();
+    expect(medidas).toHaveLength(1);
+    expect(mockSelectMedidas).toHaveBeenCalledWith('id_medida, medida, descricao');
+    expect(mockOrderMedidas).toHaveBeenCalledWith('id_medida', { ascending: true });
   });
 });
