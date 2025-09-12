@@ -19,6 +19,18 @@ jest.mock('../../components/produtos/CadastroProduto', () => {
   };
 });
 
+// Mock de EditarProduto para acionar onSuccess automaticamente ao abrir modal de edição
+jest.mock('../../components/produtos/EditarProduto', () => {
+  const React = require('react');
+  return function StubEditar(props) {
+    React.useEffect(() => {
+      // Simula edição bem-sucedida retornando produto atualizado
+      props.onSuccess?.({ id_produtos: props.id, nome: 'Caneta Azul', medida: 1, entrada: 10, saida: 2, saldo: 8 });
+    }, []);
+    return <div data-testid="editar-stub" />;
+  };
+});
+
 // Render simples (sem router pois componente atual não usa rotas)
 const renderPlain = (ui) => render(ui);
 
@@ -32,6 +44,14 @@ afterEach(() => {
 
 afterAll(() => {
   jest.restoreAllMocks();
+});
+
+// X. Erro ao carregar produtos (simulando supabase offline / chave inválida)
+test('exibe mensagem de erro quando getProdutos falha (backend indisponível)', async () => {
+  service.getProdutos.mockRejectedValueOnce(new Error('Network / Auth error'));
+  renderPlain(<ProdutoList />);
+  const alert = await screen.findByRole('alert');
+  expect(alert).toHaveTextContent(/erro ao carregar produtos/i);
 });
 
 // 1. Mensagem quando lista vazia
@@ -184,4 +204,37 @@ test('navega para a próxima página ao clicar no botão de avançar', async () 
 
   // Item da primeira página não deve estar (nem em tabela nem em cards)
   expect(screen.queryByText('Item-1')).toBeNull();
+});
+
+// 6. Fluxo de edição: ao clicar em editar, produto é atualizado e lista faz refresh com nome novo
+test('atualiza lista após edição de produto (refresh)', async () => {
+  service.getProdutos
+    .mockResolvedValueOnce([
+      { id_produtos: '1', nome: 'Caneta', medida: 1, entrada: 10, saida: 2, saldo: 8 }
+    ])
+    .mockResolvedValueOnce([
+      { id_produtos: '1', nome: 'Caneta Azul', medida: 1, entrada: 10, saida: 2, saldo: 8 }
+    ]);
+
+  renderPlain(<ProdutoList />);
+
+  // Lista inicial carregada
+  await screen.findByText(/lista de produtos/i);
+  expect(screen.getAllByText('Caneta').length).toBeGreaterThan(0);
+  expect(screen.queryByText('Caneta Azul')).toBeNull();
+
+  // Clica botão editar (tabela ou card) - usa title="Editar"
+  fireEvent.click(screen.getAllByTitle(/editar/i)[0]);
+
+  // Aguarda toast de atualização
+  const toast = await screen.findByTestId('toast');
+  expect(toast).toHaveTextContent(/atualizado/i);
+
+  // Lista deve refletir o nome atualizado após refresh
+  await waitFor(() => {
+    expect(screen.getAllByText('Caneta Azul').length).toBeGreaterThan(0);
+  });
+
+  // getProdutos chamado duas vezes (inicial + pós edição)
+  expect(service.getProdutos).toHaveBeenCalledTimes(2);
 });

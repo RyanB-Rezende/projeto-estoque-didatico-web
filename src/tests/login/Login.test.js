@@ -52,6 +52,41 @@ describe('Login (mínimo útil)', () => {
     });
   });
 
+  test('exibe mensagem de erro geral quando backend supabase falha (offline ou chave inválida)', async () => {
+    const onSuccess = jest.fn();
+    const backendError = new Error('Falha de conexão: verifique sua chave ou disponibilidade do serviço');
+    login.mockRejectedValueOnce(backendError);
+    render(<Login onSuccess={onSuccess} />);
+
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@test.com' } });
+    fireEvent.change(screen.getByLabelText(/^senha$/i), { target: { value: 'Secr3t!' } });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    // Aguarda mensagem de erro geral aparecer (role=alert da div de erro geral)
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/falha de conexão/i);
+    // onSuccess não deve ser chamado
+    expect(onSuccess).not.toHaveBeenCalled();
+    // login chamado com credenciais fornecidas
+    expect(login).toHaveBeenCalledWith('user@test.com', 'Secr3t!');
+  });
+
+  test('exibe mensagem de credenciais inválidas quando senha está incorreta', async () => {
+    const onSuccess = jest.fn();
+    const invalidCredsError = new Error('Credenciais inválidas: email ou senha incorretos');
+    login.mockRejectedValueOnce(invalidCredsError);
+    render(<Login onSuccess={onSuccess} />);
+
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'user@test.com' } });
+    fireEvent.change(screen.getByLabelText(/^senha$/i), { target: { value: 'SenhaErrada!' } });
+    fireEvent.click(screen.getByRole('button', { name: /entrar/i }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/credenciais inválidas/i);
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(login).toHaveBeenCalledWith('user@test.com', 'SenhaErrada!');
+  });
+
   test('toggle de mostrar/ocultar senha altera tipo e ícone', () => {
     render(<Login />);
     const senhaInput = screen.getByLabelText(/^senha$/i);
