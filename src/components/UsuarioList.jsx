@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { use, useEffect, useState } from "react"
 import { getUsuario } from "../services/usuarioService";
 
 const UsuarioList = () => {
@@ -8,14 +8,19 @@ const UsuarioList = () => {
     getUsuario().then(setUsuarios);
   }, []);
 
+  const handleDelete = async (id) => {
+    await deleteUsuario(id);
+    setUsuarios((prevUsuarios) => prevUsuarios.filter((usuario) => usuario.id !== id));
+  };
   return (
     <ul>
-      {usuarios.map((u) => (
-        <li key={u.id}>
-          <strong>{u.nome}</strong> - {u.email} - {u.telefone}
+      {usuarios.map((usuario) => (
+        <li key={usuario.id}>
+          <strong>{usuario.nome}</strong> - {usuario.email} - {usuario.telefone}
+          <button onClick={() => handleDelete(usuario.id)}>Remover</button>
         </li>
       ))}
-    </ul>
+      </ul>
   );
 };
 
