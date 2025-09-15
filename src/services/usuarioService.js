@@ -48,11 +48,7 @@ export const getUsuarios = async () => {
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select(`
-        *,
-        cargos (cargo),
-        turma (turma, instrutor)
-      `)
+      .select('*')
       .order('id_usuarios', { ascending: false });
 
     if (error) throw error;

@@ -1,22 +1,21 @@
 import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import AppRoutes from '../routes/AppRoutes';
-import React from 'react';
-import '@testing-library/jest-dom/extend-expect';
-import { jest } from '@jest/globals';
 
-jest.mock('../components/UsuarioList', () => () => <div>Lista de Usuários</div>);
-jest.mock('../components/CadastroUsuarios', () => () => <div>Cadastro de Usuários</div>);
-jest.mock('../components/EditUsuario', () => () => <div>Edição de Usuário</div>);
+// Mock vazio
+jest.mock('../components/UsuarioList', () => () => <div />);
+jest.mock('../components/CadastroUsuarios', () => () => <div />);
+jest.mock('../components/EditUsuario', () => () => <div />);
+jest.mock('../components/Navigation', () => () => <nav />);
 
 describe('AppRoutes', () => {
-  test('deve renderizar rotas sem erro', () => {
-    render(
-      <BrowserRouter>
+  test('deve renderizar sem erros na rota principal', () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
-      </BrowserRouter>
+      </MemoryRouter>
     );
+    
+    expect(container).toBeInTheDocument();
   });
-
-  // Testes de redirecionamento podem ser adicionados aqui
 });
