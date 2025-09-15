@@ -1,25 +1,16 @@
-import { useState } from "react";
-import CadastroUsuarios from "./components/CadastroUsuarios";
+import React from 'react';
+import { BrowserRouter as Router } from 'react-router-dom';
+import Navigation from './components/Navigation';
+import AppRoutes from './routes/AppRoutes';
 
 function App() {
-  const [usuarios, setUsuarios] = useState([]);
-
-  const handleCadastro = (dados) => {
-    setUsuarios([...usuarios, dados]);
-  };
-
   return (
-    <div>
-      <CadastroUsuarios onSubmit={handleCadastro} />
-      <h2>Usuários cadastrados:</h2>
-      <ul>
-        {usuarios.map((usuario, idx) => (
-          <li key={idx}>
-            {usuario.nome} - {usuario.email}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Router>
+      <div className="App">
+        <Navigation />
+        <AppRoutes "/cadastro"/>
+      </div>
+    </Router>
   );
 }
 
