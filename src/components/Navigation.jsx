@@ -19,7 +19,7 @@ const Navigation = () => {
       }}>
 
           <Link 
-            to="/cadastro" 
+            to="/" 
             style={{
               color: location.pathname === '/cadastro' ? '#3498db' : 'white',
               textDecoration: 'none',

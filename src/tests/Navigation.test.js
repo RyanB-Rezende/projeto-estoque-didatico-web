@@ -19,13 +19,15 @@ describe('Navigation Component', () => {
     expect(screen.getByText('Sistema de Usuários')).toBeInTheDocument();
   });
 
+  test('deve conter link para cadastrar usuário', () => {
+    render(<Navigation />);
+    expect(screen.getByText('Cadastrar Usuário')).toBeInTheDocument();
+  });
+
   test('deve conter link para lista de usuários', () => {
     render(<Navigation />);
     expect(screen.getByText('Lista de Usuários')).toBeInTheDocument();
   });
 
-  test('deve conter link para cadastrar usuário', () => {
-    render(<Navigation />);
-    expect(screen.getByText('Cadastrar Usuário')).toBeInTheDocument();
-  });
+
 });

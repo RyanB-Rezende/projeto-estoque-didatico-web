@@ -3,8 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import AppRoutes from '../routes/AppRoutes';
 
 // Mock vazio
-jest.mock('../components/UsuarioList', () => () => <div />);
 jest.mock('../components/CadastroUsuarios', () => () => <div />);
+jest.mock('../components/UsuarioList', () => () => <div />);
 jest.mock('../components/EditUsuario', () => () => <div />);
 jest.mock('../components/Navigation', () => () => <nav />);
 
