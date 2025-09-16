@@ -124,71 +124,54 @@ export default function EditarProduto({ id, onSuccess, onCancel, asModal = true 
     return <div className="alert alert-danger" role="alert">Erro ao carregar produto</div>;
   }
 
-  const wrapStyles = asModal ? {
-    position: 'fixed', inset: 0, zIndex: 1050,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(0,0,0,0.55)'
-  } : {};
-  const panelStyles = {
-    background: '#f5f2fa', borderRadius: '28px', width: '360px', maxWidth: '92vw',
-    padding: '28px 36px 24px', boxShadow: '0 8px 28px rgba(0,0,0,0.25)', fontSize: '14px'
-  };
-  const labelCls = 'fw-normal mb-1 small text-body-secondary';
-  const lineField = 'w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none';
-  const errorText = 'text-danger small mt-1';
-
   return (
-    <div style={wrapStyles} role={asModal ? 'dialog' : undefined} aria-modal={asModal || undefined}>
-      <form role="form" onSubmit={handleSubmit} noValidate style={panelStyles} className="bg-light-subtle">
-        <style>{`
-          form .form-control:focus, form select:focus { box-shadow:none; }
-          .line-select { appearance:none; -webkit-appearance:none; padding-right:18px; cursor:pointer; }
-          .btn-pill-save { background:#ffffff; border:1px solid #e3dff0; color:#4a4a5e; font-weight:500; }
-          .btn-pill-save:hover { background:#f1eef7; }
-          .btn-cancel-link { color:#6a55c2; text-decoration:none; }
-          .btn-cancel-link:hover { text-decoration:underline; }
-        `}</style>
-        <h1 className="h5 fw-semibold mb-4" style={{ letterSpacing: '0.2px' }}>Editar Produto</h1>
+    <div
+      className={asModal ? 'position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50' : ''}
+      role={asModal ? 'dialog' : undefined}
+      aria-modal={asModal || undefined}
+    >
+      <form role="form" onSubmit={handleSubmit} noValidate className="bg-light-subtle rounded-4 shadow-lg p-4 mx-3">
+        <h1 className="h5 fw-semibold mb-4">Editar Produto</h1>
         {loadingProduto ? <div className="small text-muted mb-3">Carregando...</div> : null}
         <div className="mb-3">
-          <label htmlFor="nome" className={labelCls}>Nome</label>
-          <input id="nome" name="nome" type="text" className={lineField + (errors.nome ? ' is-invalid' : '')} value={formData.nome} onChange={handleChange} />
-          {errors.nome && <div className={errorText}>{errors.nome}</div>}
+          <label htmlFor="nome" className="fw-normal mb-1 small text-body-secondary">Nome</label>
+          <input id="nome" name="nome" type="text" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none${errors.nome ? ' is-invalid' : ''}`} value={formData.nome} onChange={handleChange} />
+          {errors.nome && <div className="text-danger small mt-1">{errors.nome}</div>}
         </div>
         <div className="mb-3">
-          <label htmlFor="medida" className={labelCls}>Medida</label>
-          <select id="medida" name="medida" className={lineField + ' line-select fw-semibold' + (errors.medida ? ' is-invalid' : '')} value={formData.medida} onChange={handleChange} disabled={loadingMedidas || !!erroMedidas}>
+          <label htmlFor="medida" className="fw-normal mb-1 small text-body-secondary">Medida</label>
+          <select id="medida" name="medida" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-select shadow-none fw-semibold${errors.medida ? ' is-invalid' : ''}`} value={formData.medida} onChange={handleChange} disabled={loadingMedidas || !!erroMedidas}>
             <option value="" disabled>{loadingMedidas ? 'Carregando...' : 'Selecione'}</option>
             {medidas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
           </select>
-          {(erroMedidas || errors.medida) && <div className={errorText}>{erroMedidas || errors.medida}</div>}
+          {(erroMedidas || errors.medida) && <div className="text-danger small mt-1">{erroMedidas || errors.medida}</div>}
         </div>
         <div className="mb-3">
-          <label htmlFor="local" className={labelCls}>Local</label>
-            <input id="local" name="local" type="text" className={lineField + (errors.local ? ' is-invalid' : '')} value={formData.local} onChange={handleChange} />
-          {errors.local && <div className={errorText}>{errors.local}</div>}
+          <label htmlFor="local" className="fw-normal mb-1 small text-body-secondary">Local</label>
+            <input id="local" name="local" type="text" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none${errors.local ? ' is-invalid' : ''}`} value={formData.local} onChange={handleChange} />
+          {errors.local && <div className="text-danger small mt-1">{errors.local}</div>}
         </div>
         <div className="mb-3">
-          <label htmlFor="codigo" className={labelCls}>Código</label>
-          <input id="codigo" name="codigo" type="text" className={lineField + (errors.codigo ? ' is-invalid' : '')} value={formData.codigo} onChange={handleChange} />
-          {errors.codigo && <div className={errorText}>{errors.codigo}</div>}
+          <label htmlFor="codigo" className="fw-normal mb-1 small text-body-secondary">Código</label>
+          <input id="codigo" name="codigo" type="text" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none${errors.codigo ? ' is-invalid' : ''}`} value={formData.codigo} onChange={handleChange} />
+          {errors.codigo && <div className="text-danger small mt-1">{errors.codigo}</div>}
         </div>
         <div className="mb-4">
-          <label htmlFor="data_entrada" className={labelCls + ' d-block'}>Data de Entrada</label>
+          <label htmlFor="data_entrada" className="fw-normal mb-1 small text-body-secondary d-block">Data de Entrada</label>
           <div className="d-flex align-items-center gap-2">
-            <input id="data_entrada" name="data_entrada" type="date" className={lineField + ' flex-grow-1' + (errors.data_entrada ? ' is-invalid' : '')} value={formData.data_entrada} onChange={handleChange} style={{ maxWidth: '160px' }} />
-            <i className="bi bi-calendar-event" style={{ fontSize: '20px' }}></i>
+            <input id="data_entrada" name="data_entrada" type="date" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none flex-grow-1${errors.data_entrada ? ' is-invalid' : ''}`} value={formData.data_entrada} onChange={handleChange} />
+            <i className="bi bi-calendar-event fs-5"></i>
           </div>
-          {errors.data_entrada && <div className={errorText}>{errors.data_entrada}</div>}
+          {errors.data_entrada && <div className="text-danger small mt-1">{errors.data_entrada}</div>}
         </div>
         <div className="mb-4">
-          <label htmlFor="entrada" className={labelCls}>Quantidade</label>
-          <input id="entrada" name="entrada" type="number" min="0" className={lineField + (errors.entrada ? ' is-invalid' : '')} value={formData.entrada} onChange={handleChange} />
-          {errors.entrada && <div className={errorText}>{errors.entrada}</div>}
+          <label htmlFor="entrada" className="fw-normal mb-1 small text-body-secondary">Quantidade</label>
+          <input id="entrada" name="entrada" type="number" min="0" className={`w-100 bg-transparent border-0 border-bottom pb-1 px-0 form-control shadow-none${errors.entrada ? ' is-invalid' : ''}`} value={formData.entrada} onChange={handleChange} />
+          {errors.entrada && <div className="text-danger small mt-1">{errors.entrada}</div>}
         </div>
         <div className="d-flex justify-content-end align-items-center gap-3">
-          <button type="button" className="btn btn-sm btn-cancel-link" onClick={() => { onCancel && onCancel(); }}>Cancelar</button>
-          <button type="submit" className="btn btn-sm btn-pill-save rounded-pill px-4" disabled={salvando}>{salvando ? spinner() : <i className="bi bi-save me-1"></i>}Salvar</button>
+          <button type="button" className="btn btn-sm btn-link link-primary p-0" onClick={() => { onCancel && onCancel(); }}>Cancelar</button>
+          <button type="submit" className="btn btn-sm btn-outline-secondary rounded-pill px-4" disabled={salvando}>{salvando ? spinner() : <i className="bi bi-save me-1"></i>}Salvar</button>
         </div>
         {status.mensagem && <div className={`mt-3 small ${status.tipo === 'erro' ? 'text-danger' : 'text-success'}`}>{status.mensagem}</div>}
       </form>

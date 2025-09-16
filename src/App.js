@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import './App.css';
 import Login from './components/login/Login';
-import ProdutoList from './components/produtos/ProdutoList';
+import ProdutoList from './components/produtos/ProdutoList'; // mantido caso volte depois
+import CadastroCurso from './components/cursos/CadastroCurso';
+import CursoList from './components/cursos/CursoList';
 import { logout, isAuthenticated } from './services/login/authService';
+import CadastroProduto from './components/produtos/CadastroProduto';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -26,7 +29,9 @@ function App() {
         <span className="navbar-brand mb-0 h6">Estoque</span>
         <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>Sair</button>
       </nav>
-      <ProdutoList />
+      <div className="container py-4">
+        <CursoList />
+      </div>
     </div>
   );
 }
