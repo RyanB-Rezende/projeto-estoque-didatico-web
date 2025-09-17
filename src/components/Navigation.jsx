@@ -18,43 +18,35 @@ const Navigation = () => {
         alignItems: 'center'
       }}>
 
-          <Link 
-            to="/" 
-            style={{
-              color: location.pathname === '/cadastro' ? '#3498db' : 'white',
-              textDecoration: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              backgroundColor: location.pathname === '/cadastro' ? 'white' : 'transparent',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Cadastrar Usuário
-          </Link>
+<Link 
+  to="/" 
+  style={{
+    color: location.pathname === '/' ? '#3498db' : 'white',
+    textDecoration: 'none',
+    padding: '0.5rem 1rem',
+    borderRadius: '4px',
+    backgroundColor: location.pathname === '/' ? 'white' : 'transparent',
+    transition: 'all 0.3s ease'
+  }}
+>
+  Cadastrar Usuário
+</Link>
 
-        <Link to="/cadastro" style={{ color: 'white', textDecoration: 'none' }}>
-          <h1 style={{ margin: 0 }}>Sistema de Usuários</h1>
-        </Link>
-        
-
-
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <Link 
-            to="/" 
-            style={{
-              color: location.pathname === '/' ? '#3498db' : 'white',
-              textDecoration: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              backgroundColor: location.pathname === '/' ? 'white' : 'transparent',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Lista de Usuários
-          </Link>
-          
-
-        </div>
+<div style={{ display: 'flex', gap: '1rem' }}>
+  <Link 
+    to="/usuarios" 
+    style={{
+      color: location.pathname === '/usuarios' ? '#3498db' : 'white',
+      textDecoration: 'none',
+      padding: '0.5rem 1rem',
+      borderRadius: '4px',
+      backgroundColor: location.pathname === '/usuarios' ? 'white' : 'transparent',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    Lista de Usuários
+  </Link>
+</div>
       </div>
     </nav>
   );

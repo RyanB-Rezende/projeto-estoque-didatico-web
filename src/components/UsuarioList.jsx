@@ -142,7 +142,7 @@ const UsuarioList = () => {
               {masked ? "👁️ Mostrar Dados" : "🔒 Ocultar Dados"}
             </button>
             <Link
-              to="/cadastro"
+              to="/"
               style={{
                 backgroundColor: "#27ae60",
                 color: "white",
@@ -228,13 +228,13 @@ const UsuarioList = () => {
                           fontSize: "12px",
                           fontWeight: "bold",
                           backgroundColor:
-                            usuario.status === "ativo" ? "#d4edda" : "#f8d7da",
+                            usuario.status === "Instrutor(a)" ? "#d4edda" : "#f8d7da",
                           color:
-                            usuario.status === "ativo" ? "#155724" : "#721c24",
+                            usuario.status === "Admin" ? "#155724" : "#721c24",
                           textTransform: "uppercase",
                         }}
                       >
-                        {usuario.status || "ativo"}
+                        {usuario.status || "Admin"}
                       </span>
                     </td>
                     <td style={{ padding: "12px", textAlign: "center" }}>

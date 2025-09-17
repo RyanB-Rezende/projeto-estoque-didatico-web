@@ -6,19 +6,19 @@ import EditUsuario from '../components/EditUsuario';
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      <Route path="/cadastro" element={<CadastroUsuarios />} />
-      <Route path="/" element={<UsuarioList />} />
-      <Route path="/editar/:id" element={<EditUsuario />} />
-      
-      {/* Rota para página não encontrada */}
-      <Route path="*" element={
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2>Página não encontrada</h2>
-          <p>A página que você está procurando não existe.</p>
-        </div>
-      } />
-    </Routes>
+<Routes>
+  <Route path="/" element={<CadastroUsuarios />} />
+  <Route path="/usuarios" element={<UsuarioList />} />
+  <Route path="/editar/:id" element={<EditUsuario />} />
+
+  {/* Página não encontrada */}
+  <Route path="*" element={
+    <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <h2>Página não encontrada</h2>
+      <p>A página que você está procurando não existe.</p>
+    </div>
+  } />
+</Routes>
   );
 };
 

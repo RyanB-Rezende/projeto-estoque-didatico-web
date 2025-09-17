@@ -8,7 +8,7 @@ function App() {
     <Router>
       <div className="App">
         <Navigation />
-        <AppRoutes/>
+        <AppRoutes />
       </div>
     </Router>
   );

@@ -90,7 +90,7 @@ const CadastroUsuarios = () => {
       console.log('✅ Usuário salvo no Supabase:', usuarioCriado);
 
       alert('Usuário cadastrado com sucesso!');
-      navigate('/'); // Redireciona para listagem
+      navigate('/usuarios'); // Redireciona para listagem
     } catch (error) {
       console.error('❌ Erro ao cadastrar usuário:', error);
       alert('Erro ao cadastrar usuário: ' + error.message);

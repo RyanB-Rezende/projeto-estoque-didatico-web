@@ -19,7 +19,7 @@ const EditUsuario = () => {
     turma: '',
     cpf: '',
     data_nascimento: '',
-    status: 'ativo'
+    status: ''
   });
   
   const [turmas, setTurmas] = useState([]);
@@ -95,7 +95,7 @@ const EditUsuario = () => {
           turma: usuario.turma || '',
           cpf: formatarCPF(usuario.cpf || ''),
           data_nascimento: usuario.data_nascimento || '',
-          status: usuario.status || 'ativo'
+          status: usuario.status || ''
         });
 
         // Carregar turmas e cargos
@@ -362,8 +362,8 @@ const EditUsuario = () => {
               style={inputStyle}
               required
             >
-              <option value="ativo">Ativo</option>
-              <option value="inativo">Inativo</option>
+              <option value="Instrutor(a)">Inst</option>
+              <option value="Admin">Admin</option>
             </select>
           </div>
 
