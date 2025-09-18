@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createUsuario } from '../services/usuarioService';
-import { getTurmas } from '../services/turmaService';
-import { getCargos } from '../services/cargoService';
+import { createUsuario } from '../../services/usuario/usuarioService';
+import { getTurmas } from '../../services/turma/turmaService';
+import { getCargos } from '../../services/cargo/cargoService';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaLock } from 'react-icons/fa';
 
 const CadastroUsuarios = () => {

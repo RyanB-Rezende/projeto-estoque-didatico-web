@@ -1,17 +1,17 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import CadastroUsuarios from '../components/CadastroUsuarios';
-import { createUsuario } from '../services/usuarioService';
-import { getTurmas } from '../services/turmaService';
-import { getCargos } from '../services/cargoService';
+import CadastroUsuarios from '../../components/usuario/CadastroUsuarios';
+import { createUsuario } from '../../services/usuario/usuarioService';
+import { getTurmas } from '../../services/turma/turmaService';
+import { getCargos } from '../../services/cargo/cargoService';
 import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
 import '@testing-library/jest-dom';
 
-// Mock dos serviços
-jest.mock('../services/usuarioService');
-jest.mock('../services/turmaService');
-jest.mock('../services/cargoService');
+// Mock dos serviços (paths reais usados pelo componente)
+jest.mock('../../services/usuario/usuarioService');
+jest.mock('../../services/turma/turmaService');
+jest.mock('../../services/cargo/cargoService');
 
 // Mock do react-router-dom para o hook useNavigate
 const mockNavigate = jest.fn();
@@ -59,7 +59,7 @@ describe('CadastroUsuarios', () => {
 
   const renderComponent = () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <CadastroUsuarios />
       </MemoryRouter>
     );

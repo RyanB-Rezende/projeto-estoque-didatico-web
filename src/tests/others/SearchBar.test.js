@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import SearchBar from '../components/common/SearchBar';
+import SearchBar from '../../components/common/SearchBar';
 
 // Wrapper para simular filtragem de produtos a partir do termo pesquisado
 function ProductSearchWrapper({ products }) {

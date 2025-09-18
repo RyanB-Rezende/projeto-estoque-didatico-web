@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import EditUsuario from '../components/EditUsuario';
+import EditUsuario from '../../components/usuario/EditUsuario';
 
 // Mocks simplificados
 jest.mock('../services/usuarioService', () => ({

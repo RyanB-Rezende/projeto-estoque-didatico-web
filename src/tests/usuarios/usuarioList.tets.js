@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import UsuarioList from '../components/UsuarioList';
+import UsuarioList from '../../components/usuario/UsuarioList';
 
 // Mocks
 jest.mock('../services/usuarioService', () => ({

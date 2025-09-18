@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import Navigation from '../components/Navigation';
+import { MemoryRouter } from 'react-router-dom';
+import Navigation from '../../components/common/Navigation';
 import '@testing-library/jest-dom';
 
 // Mock do useLocation
@@ -17,7 +17,11 @@ describe('Navigation', () => {
 
   const renderWithRouter = (ui, { route = '/' } = {}) => {
     window.history.pushState({}, 'Test page', route);
-    return render(ui, { wrapper: BrowserRouter });
+    return render(
+      <MemoryRouter initialEntries={[route]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        {ui}
+      </MemoryRouter>
+    );
   };
 
   test('deve renderizar os links de navegação', () => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getUsuarios, updateUsuario } from '../services/usuarioService';
-import { getTurmas } from '../services/turmaService';
-import { getCargos } from '../services/cargoService';
+import { getUsuarios, updateUsuario } from '../../services/usuario/usuarioService';
+import { getTurmas } from '../../services/turma/turmaService';
+import { getCargos } from '../../services/cargo/cargoService';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaLock, FaArrowLeft } from 'react-icons/fa';
 
 const EditUsuario = () => {

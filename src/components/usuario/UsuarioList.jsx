@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getUsuarios, deleteUsuario } from "../services/usuarioService";
+import { getUsuarios, deleteUsuario } from "../../services/usuario/usuarioService";
 
 // Funções utilitárias para formatação
 const formatTelefone = (telefone) => {
