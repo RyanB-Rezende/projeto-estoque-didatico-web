@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/supabase';
+import { supabase } from '../supabase/supabaseClient.js';
 
 // Serviço de cursos - implementação mínima para atender testes TDD
 export const addCurso = async (curso) => {
