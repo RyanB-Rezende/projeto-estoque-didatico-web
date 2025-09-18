@@ -29,22 +29,25 @@ describe('Navigation', () => {
     
     renderWithRouter(<Navigation />);
     
+    expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('Cadastrar Usuário')).toBeInTheDocument();
     expect(screen.getByText('Lista de Usuários')).toBeInTheDocument();
   });
 
-  test('deve destacar o link "Cadastrar Usuário" quando estiver na página inicial', () => {
+  test('deve destacar o link "Home" quando estiver na página inicial', () => {
     mockUseLocation.mockReturnValue({ pathname: '/' });
     
     renderWithRouter(<Navigation />);
     
+    const homeLink = screen.getByText('Home');
     const cadastrarLink = screen.getByText('Cadastrar Usuário');
     const listaLink = screen.getByText('Lista de Usuários');
     
-    // Verifica estilos quando na página inicial
-    expect(cadastrarLink).toHaveStyle('color: #3498db');
-    expect(cadastrarLink).toHaveStyle('backgroundColor: white');
+    expect(homeLink).toHaveStyle('color: #3498db');
+    expect(homeLink).toHaveStyle('backgroundColor: white');
     
+    expect(cadastrarLink).toHaveStyle('color: white');
+    expect(cadastrarLink).toHaveStyle('backgroundColor: transparent');
     expect(listaLink).toHaveStyle('color: white');
     expect(listaLink).toHaveStyle('backgroundColor: transparent');
   });
@@ -54,6 +57,7 @@ describe('Navigation', () => {
     
     renderWithRouter(<Navigation />, { route: '/usuarios' });
     
+    const homeLink = screen.getByText('Home');
     const cadastrarLink = screen.getByText('Cadastrar Usuário');
     const listaLink = screen.getByText('Lista de Usuários');
     
@@ -61,8 +65,28 @@ describe('Navigation', () => {
     expect(listaLink).toHaveStyle('color: #3498db');
     expect(listaLink).toHaveStyle('backgroundColor: white');
     
+    expect(homeLink).toHaveStyle('color: white');
+    expect(homeLink).toHaveStyle('backgroundColor: transparent');
     expect(cadastrarLink).toHaveStyle('color: white');
     expect(cadastrarLink).toHaveStyle('backgroundColor: transparent');
+  });
+
+  test('deve destacar o link "Cadastrar Usuário" quando estiver na página /cadastro', () => {
+    mockUseLocation.mockReturnValue({ pathname: '/cadastro' });
+    
+    renderWithRouter(<Navigation />, { route: '/cadastro' });
+    
+    const homeLink = screen.getByText('Home');
+    const cadastrarLink = screen.getByText('Cadastrar Usuário');
+    const listaLink = screen.getByText('Lista de Usuários');
+
+    expect(cadastrarLink).toHaveStyle('color: #3498db');
+    expect(cadastrarLink).toHaveStyle('backgroundColor: white');
+
+    expect(homeLink).toHaveStyle('color: white');
+    expect(homeLink).toHaveStyle('backgroundColor: transparent');
+    expect(listaLink).toHaveStyle('color: white');
+    expect(listaLink).toHaveStyle('backgroundColor: transparent');
   });
 
   test('deve manter estilos normais para ambas as rotas quando em outra página', () => {
@@ -70,10 +94,13 @@ describe('Navigation', () => {
     
     renderWithRouter(<Navigation />, { route: '/outra-rota' });
     
+    const homeLink = screen.getByText('Home');
     const cadastrarLink = screen.getByText('Cadastrar Usuário');
     const listaLink = screen.getByText('Lista de Usuários');
     
     // Ambos os links devem ter estilos normais (não destacados)
+    expect(homeLink).toHaveStyle('color: white');
+    expect(homeLink).toHaveStyle('backgroundColor: transparent');
     expect(cadastrarLink).toHaveStyle('color: white');
     expect(cadastrarLink).toHaveStyle('backgroundColor: transparent');
     
@@ -86,11 +113,13 @@ describe('Navigation', () => {
     
     renderWithRouter(<Navigation />);
     
+    const homeLink = screen.getByText('Home');
     const cadastrarLink = screen.getByText('Cadastrar Usuário');
     const listaLink = screen.getByText('Lista de Usuários');
     
-    expect(cadastrarLink.closest('a')).toHaveAttribute('href', '/');
+    expect(homeLink.closest('a')).toHaveAttribute('href', '/');
     expect(listaLink.closest('a')).toHaveAttribute('href', '/usuarios');
+    expect(cadastrarLink.closest('a')).toHaveAttribute('href', '/cadastro');
   });
 
   test('deve aplicar estilos de container corretamente', () => {
@@ -101,9 +130,9 @@ describe('Navigation', () => {
     const navElement = container.querySelector('nav');
     const innerDiv = container.querySelector('nav > div');
     
-    expect(navElement).toHaveStyle('backgroundColor: #2c3e50');
-    expect(navElement).toHaveStyle('padding: 1rem');
-    expect(navElement).toHaveStyle('marginBottom: 2rem');
+  expect(navElement).toHaveStyle('backgroundColor: #2c3e50');
+  expect(navElement).toHaveStyle('padding: 0.75rem 0');
+  expect(navElement).toHaveStyle('marginBottom: 2rem');
     
     expect(innerDiv).toHaveStyle('maxWidth: 1200px');
     expect(innerDiv).toHaveStyle('margin: 0 auto');

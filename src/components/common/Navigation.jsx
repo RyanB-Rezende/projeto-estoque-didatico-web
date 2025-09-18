@@ -7,7 +7,7 @@ const Navigation = () => {
   return (
     <nav style={{
       backgroundColor: '#2c3e50',
-      padding: '1rem',
+      padding: '0.75rem 0',
       marginBottom: '2rem'
     }}>
       <div style={{
@@ -29,8 +29,8 @@ const Navigation = () => {
     transition: 'all 0.3s ease'
   }}
 >
-  Cadastrar Usuário
-</Link>
+  Home
+  </Link>
 
 <div style={{ display: 'flex', gap: '1rem' }}>
   <Link 
@@ -45,6 +45,19 @@ const Navigation = () => {
     }}
   >
     Lista de Usuários
+  </Link>
+  <Link 
+    to="/cadastro" 
+    style={{
+      color: location.pathname === '/cadastro' ? '#3498db' : 'white',
+      textDecoration: 'none',
+      padding: '0.5rem 1rem',
+      borderRadius: '4px',
+      backgroundColor: location.pathname === '/cadastro' ? 'white' : 'transparent',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    Cadastrar Usuário
   </Link>
 </div>
       </div>

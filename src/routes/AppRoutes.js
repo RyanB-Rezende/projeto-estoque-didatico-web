@@ -12,15 +12,19 @@ import EditarCurso from '../components/cursos/EditarCurso';
 import ProdutoList from '../components/produtos/ProdutoList';
 import CadastroProduto from '../components/produtos/CadastroProduto';
 import EditarProduto from '../components/produtos/EditarProduto';
+import Home from '../components/home/Home';
 
 const AppRoutes = () => (
   <Routes>
+    {/* Home / Dashboard */}
+    <Route path="/" element={<Home />} />
+    <Route path="/home" element={<Home />} />
     {/* Usuários */}
-    <Route path="/" element={<CadastroUsuarios />} />
+    <Route path="/cadastro" element={<CadastroUsuarios />} />
     <Route path="/usuarios" element={<UsuarioList />} />
     <Route path="/usuarios/editar/:id" element={<EditUsuario />} />
-    {/* Compat: manter antigo /editar/:id redirecionando */}
-    <Route path="/editar/:id" element={<Navigate to="/usuarios/editar/:id" replace />} />
+  {/* Compat: manter antigo /editar/:id redirecionando */}
+  <Route path="/editar/:id" element={<Navigate to="/usuarios/editar/:id" replace />} />
 
     {/* Cursos */}
     <Route path="/cursos" element={<CursoList />} />
