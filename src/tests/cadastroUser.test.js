@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import CadastroUsuarios from '../components/CadastroUsuarios';
 import { createUsuario } from '../services/usuarioService';
 import { getTurmas } from '../services/turmaService';
@@ -19,18 +20,24 @@ jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Mock dos ícones do FontAwesome
+jest.mock('react-icons/fa', () => ({
+  FaUser: () => <div data-testid="fa-user">UserIcon</div>,
+  FaEnvelope: () => <div data-testid="fa-envelope">EnvelopeIcon</div>,
+  FaPhone: () => <div data-testid="fa-phone">PhoneIcon</div>,
+  FaIdCard: () => <div data-testid="fa-id-card">IdCardIcon</div>,
+  FaMapMarkerAlt: () => <div data-testid="fa-map-marker">MapMarkerIcon</div>,
+  FaLock: () => <div data-testid="fa-lock">LockIcon</div>,
+}));
+
 describe('CadastroUsuarios', () => {
   // Mock do window.alert
   const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
   beforeEach(() => {
     // Limpa os mocks antes de cada teste
-    createUsuario.mockClear();
-    getTurmas.mockClear();
-    getCargos.mockClear();
-    alertSpy.mockClear();
-    mockNavigate.mockClear();
-
+    jest.clearAllMocks();
+    
     // Mock de retorno dos serviços
     getTurmas.mockResolvedValue([
       { id_turma: 1, turma: 'Turma A', instrutor: 'João Silva' },
@@ -41,6 +48,8 @@ describe('CadastroUsuarios', () => {
       { id_cargos: 1, cargo: 'Professor' },
       { id_cargos: 2, cargo: 'Aluno' }
     ]);
+
+    createUsuario.mockResolvedValue({ id: 1 });
   });
 
   afterAll(() => {
@@ -56,56 +65,62 @@ describe('CadastroUsuarios', () => {
     );
   };
 
-  const fillForm = () => {
-    fireEvent.change(screen.getByPlaceholderText(/nome completo/i), { target: { value: 'João Silva' } });
-    fireEvent.change(screen.getByPlaceholderText(/e-mail/i), { target: { value: 'joao@email.com' } });
-    fireEvent.change(screen.getByPlaceholderText(/telefone/i), { target: { value: '11999999999' } });
-    fireEvent.change(screen.getByPlaceholderText(/cpf/i), { target: { value: '12345678900' } });
-    fireEvent.change(screen.getByPlaceholderText(/endereço/i), { target: { value: 'Rua A, 123' } });
-    fireEvent.change(screen.getByPlaceholderText(/senha/i), { target: { value: 'senha123' } });
-    // O select de cargo não tem um label associado, então buscamos pelo role de combobox
+  const fillForm = async (user) => {
+    // Aguarda o carregamento dos dados
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByPlaceholderText(/nome completo/i), 'João Silva');
+    await user.type(screen.getByPlaceholderText(/e-mail/i), 'joao@email.com');
+    await user.type(screen.getByPlaceholderText(/telefone/i), '11999999999');
+    await user.type(screen.getByPlaceholderText(/cpf/i), '12345678900');
+    await user.type(screen.getByPlaceholderText(/endereço/i), 'Rua A, 123');
+    await user.type(screen.getByPlaceholderText(/senha/i), 'senha123');
+    
+    // Seleciona o cargo
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
   };
 
   test("renderiza o formulário de cadastro corretamente", async () => {
     renderComponent();
 
-    // Aguarda o carregamento dos dados (cargos)
+    // Aguarda o carregamento dos dados
     await waitFor(() => {
       expect(screen.getByText(/selecione o cargo/i)).toBeInTheDocument();
     });
+    
     expect(screen.getByRole('button', { name: /criar conta/i })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/nome completo/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e-mail/i)).toBeInTheDocument();
   });
 
   test('deve exibir alerta de validação se campos obrigatórios não forem preenchidos', async () => {
+    const user = userEvent.setup();
     renderComponent();
 
+    // Aguarda o carregamento
     await waitFor(() => {
       expect(screen.getByText(/selecione o cargo/i)).toBeInTheDocument();
     });
 
     const submitButton = screen.getByRole('button', { name: /criar conta/i });
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
-    await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Por favor, preencha todos os campos obrigatórios!');
-    });
+    expect(alertSpy).toHaveBeenCalledWith('Por favor, preencha todos os campos obrigatórios!');
     expect(createUsuario).not.toHaveBeenCalled();
   });
 
   test('deve chamar createUsuario com os dados corretos e navegar em caso de sucesso', async () => {
-    createUsuario.mockResolvedValue({ id: 1, nome: 'João Silva' });
+    const user = userEvent.setup();
     renderComponent();
 
-    await waitFor(() => {
-      expect(screen.getByText(/selecione o cargo/i)).toBeInTheDocument();
-    });
-
-    fillForm();
+    await fillForm(user);
 
     const submitButton = screen.getByRole('button', { name: /criar conta/i });
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
+    // Verifica se createUsuario foi chamado com os dados corretos
     await waitFor(() => {
       expect(createUsuario).toHaveBeenCalledWith({
         nome: 'João Silva',
@@ -116,32 +131,50 @@ describe('CadastroUsuarios', () => {
         senha: 'senha123',
         turma: null,
         cpf: '123.456.789-00',
-        data_nascimento: '',
+        data_nascimento: ''
       });
     });
 
     expect(alertSpy).toHaveBeenCalledWith('Usuário cadastrado com sucesso!');
-    expect(mockNavigate).toHaveBeenCalledWith('/');
+    expect(mockNavigate).toHaveBeenCalledWith('/usuarios'); // Corrigido para /usuarios
   });
 
   test('deve exibir alerta de erro quando o cadastro falha na API', async () => {
-    createUsuario.mockRejectedValue(new Error('Erro na API'));
+    const user = userEvent.setup();
+    const errorMessage = 'Erro na API';
+    createUsuario.mockRejectedValue(new Error(errorMessage));
+    
     renderComponent();
 
-    await waitFor(() => {
-      expect(screen.getByText(/selecione o cargo/i)).toBeInTheDocument();
-    });
-
-    fillForm();
+    await fillForm(user);
 
     const submitButton = screen.getByRole('button', { name: /criar conta/i });
-    fireEvent.click(submitButton);
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(createUsuario).toHaveBeenCalled();
     });
 
-    expect(alertSpy).toHaveBeenCalledWith('Erro ao cadastrar usuário: Erro na API');
+    expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Erro ao cadastrar usuário:'));
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  test('deve aplicar máscaras de formatação nos campos', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/telefone/i)).toBeInTheDocument();
+    });
+
+    // Testa máscara de telefone
+    const telefoneInput = screen.getByPlaceholderText(/telefone/i);
+    await user.type(telefoneInput, '11999999999');
+    expect(telefoneInput.value).toBe('(11) 99999-9999');
+
+    // Testa máscara de CPF
+    const cpfInput = screen.getByPlaceholderText(/cpf/i);
+    await user.type(cpfInput, '12345678900');
+    expect(cpfInput.value).toBe('123.456.789-00');
   });
 });

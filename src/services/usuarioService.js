@@ -9,7 +9,7 @@ export const createUsuario = async (usuarioData) => {
       endereco: usuarioData.endereco,
       cargo: usuarioData.cargo,
       senha: usuarioData.senha,
-      status: 'ativo',
+      status: usuarioData.status ||  '',
       turma: usuarioData.turma || null, // Garante que seja null se vazio
       cpf: usuarioData.cpf,
       data_nascimento: usuarioData.data_nascimento || null
@@ -48,7 +48,10 @@ export const getUsuarios = async () => {
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('*')
+     .select(`
+        *,
+        cargos:cargo (cargo)
+      `)
       .order('id_usuarios', { ascending: false });
 
     if (error) throw error;

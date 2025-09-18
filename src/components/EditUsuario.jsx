@@ -56,7 +56,6 @@ const EditUsuario = () => {
     
     let valorFormatado = value;
     
-    // Aplicar formatação específica para cada campo
     if (name === 'telefone') {
       valorFormatado = formatarTelefone(value);
     } else if (name === 'cpf') {
@@ -74,31 +73,28 @@ const EditUsuario = () => {
       try {
         setCarregando(true);
         
-        // Carregar dados do usuário
         const usuarios = await getUsuarios();
         const usuario = usuarios.find(u => u.id_usuarios === parseInt(id));
         
         if (!usuario) {
           alert('Usuário não encontrado!');
-          navigate('/');
+          navigate('/usuarios');
           return;
         }
 
-        // Formatar telefone e CPF ao carregar os dados
         setFormData({
           nome: usuario.nome || '',
           telefone: formatarTelefone(usuario.telefone || ''),
           email: usuario.email || '',
           endereco: usuario.endereco || '',
           cargo: usuario.cargo || '',
-          senha: '', // Não carrega a senha por segurança
+          senha: '',
           turma: usuario.turma || '',
           cpf: formatarCPF(usuario.cpf || ''),
           data_nascimento: usuario.data_nascimento || '',
           status: usuario.status || ''
         });
 
-        // Carregar turmas e cargos
         const [turmasData, cargosData] = await Promise.all([
           getTurmas().catch(() => []),
           getCargos()
@@ -110,7 +106,7 @@ const EditUsuario = () => {
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
         alert('Erro ao carregar dados do usuário');
-        navigate('/');
+        navigate('/usuarios');
       } finally {
         setCarregando(false);
       }
@@ -123,7 +119,6 @@ const EditUsuario = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Validação
     if (!formData.nome || !formData.telefone || !formData.email || !formData.endereco || !formData.cargo || !formData.cpf) {
       alert('Por favor, preencha todos os campos obrigatórios!');
       setLoading(false);
@@ -131,7 +126,6 @@ const EditUsuario = () => {
     }
     
     try {
-      // Remover formatação antes de enviar
       const dadosParaEnviar = { 
         ...formData,
         telefone: formData.telefone.replace(/\D/g, ''),
@@ -139,17 +133,16 @@ const EditUsuario = () => {
       };
       
       if (!dadosParaEnviar.senha) {
-        delete dadosParaEnviar.senha; // Remove a senha se estiver vazia
+        delete dadosParaEnviar.senha;
       }
       
-      // Converter para números
       dadosParaEnviar.cargo = parseInt(dadosParaEnviar.cargo);
       dadosParaEnviar.turma = dadosParaEnviar.turma ? parseInt(dadosParaEnviar.turma) : null;
       
       await updateUsuario(parseInt(id), dadosParaEnviar);
       
       alert('Usuário atualizado com sucesso!');
-      navigate('/');
+      navigate('/usuarios'); // ✅ Redireciona para listagem
       
     } catch (error) {
       console.error('❌ Erro ao atualizar usuário:', error);
@@ -194,7 +187,7 @@ const EditUsuario = () => {
         {/* Cabeçalho */}
         <div style={{ display: "flex", alignItems: "center", marginBottom: "1.5rem" }}>
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/usuarios')}
             style={{
               background: "none",
               border: "none",
@@ -362,7 +355,7 @@ const EditUsuario = () => {
               style={inputStyle}
               required
             >
-              <option value="Instrutor(a)">Inst</option>
+              <option value="Instrutor(a)">Instrutor(a)</option>
               <option value="Admin">Admin</option>
             </select>
           </div>
@@ -383,7 +376,7 @@ const EditUsuario = () => {
   );
 };
 
-// estilos inline reaproveitáveis
+// estilos inline
 const inputGroup = {
   display: "flex",
   alignItems: "center",

@@ -23,18 +23,16 @@ const formatCPF = (cpf) => {
   return cpf;
 };
 
-// Funções de mascaramento CORRIGIDAS
+// Funções de mascaramento
 const maskTelefone = (telefone) => {
   if (!telefone) return "";
   const formatted = formatTelefone(telefone);
-  // Mantém os parênteses, espaço e hífen, mas mascara os números
   return formatted.replace(/\d(?=\d{4})/g, "*");
 };
 
 const maskCPF = (cpf) => {
   if (!cpf) return "";
   const formatted = formatCPF(cpf);
-  // Mantém os pontos e hífen, mas mascara os números
   return formatted.replace(/\d(?=\d{2}-\d{2}$)/g, "*");
 };
 
@@ -49,7 +47,7 @@ const UsuarioList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [masked, setMasked] = useState(true); // Estado para controlar se os dados estão mascarados
+  const [masked, setMasked] = useState(true);
 
   const carregarUsuarios = async () => {
     try {
@@ -73,7 +71,7 @@ const UsuarioList = () => {
       try {
         await deleteUsuario(id);
         alert("Usuário excluído com sucesso!");
-        carregarUsuarios(); // Recarregar a lista
+        carregarUsuarios();
       } catch (err) {
         alert("Erro ao excluir usuário: " + err.message);
       }
@@ -82,6 +80,38 @@ const UsuarioList = () => {
 
   const toggleMask = () => {
     setMasked(!masked);
+  };
+
+  // Função para obter o nome do cargo
+  const getNomeCargo = (usuario) => {
+    // Verifica se há um objeto cargo com nome
+    if (usuario.cargo && typeof usuario.cargo === 'object' && usuario.cargo.nome) {
+      return usuario.cargo.nome;
+    }
+    // Verifica se há uma propriedade cargo direta
+    if (usuario.cargo && typeof usuario.cargo === 'string') {
+      return usuario.cargo;
+    }
+    // Verifica se há um objeto cargos
+    if (usuario.cargos && usuario.cargos.cargo) {
+      return usuario.cargos.cargo;
+    }
+    // Fallback para N/A se nenhum cargo for encontrado
+    return "N/A";
+  };
+
+  // Função para determinar a classe do status
+  const getStatusClass = (status) => {
+    if (status === "ADMIN" || status === "Admin") return "status-admin";
+    if (status === "Instrutor(a)" || status === "INSTRUTOR" || status === "Instrutor") return "status-instructor";
+    return "status-active";
+  };
+
+  // Função para formatar o texto do status
+  const formatStatus = (status) => {
+    if (status === "ADMIN" || status === "Admin") return "ADMIN";
+    if (status === "Instrutor(a)" || status === "INSTRUTOR" || status === "Instrutor") return "INSTRUTOR";
+    return status || "ATIVO";
   };
 
   if (loading)
@@ -208,18 +238,25 @@ const UsuarioList = () => {
               </thead>
               <tbody>
                 {usuarios.map((usuario) => (
-                  <tr key={usuario.id_usuarios} style={{ borderBottom: "1px solid #eee" }}>
+                  <tr
+                    key={usuario.id_usuarios}
+                    style={{ borderBottom: "1px solid #eee" }}
+                  >
                     <td style={tdStyle}>{usuario.nome}</td>
                     <td style={tdStyle}>
                       {masked ? maskEmail(usuario.email) : usuario.email}
                     </td>
                     <td style={tdStyle}>
-                      {masked ? maskTelefone(usuario.telefone) : formatTelefone(usuario.telefone)}
+                      {masked
+                        ? maskTelefone(usuario.telefone)
+                        : formatTelefone(usuario.telefone)}
                     </td>
                     <td style={tdStyle}>
                       {masked ? maskCPF(usuario.cpf) : formatCPF(usuario.cpf)}
                     </td>
-                    <td style={tdStyle}>{usuario.cargos?.cargo || "N/A"}</td>
+                    {/* Cargo - usando a função getNomeCargo */}
+                    <td style={tdStyle}>{getNomeCargo(usuario)}</td>
+                    {/* Status - usando as funções de formatação */}
                     <td style={tdStyle}>
                       <span
                         style={{
@@ -228,13 +265,21 @@ const UsuarioList = () => {
                           fontSize: "12px",
                           fontWeight: "bold",
                           backgroundColor:
-                            usuario.status === "Instrutor(a)" ? "#d4edda" : "#f8d7da",
+                            getStatusClass(usuario.status) === "status-admin" 
+                              ? "#cce7ff" 
+                              : getStatusClass(usuario.status) === "status-instructor"
+                              ? "#fff3cd"
+                              : "#d4edda",
                           color:
-                            usuario.status === "Admin" ? "#155724" : "#721c24",
+                            getStatusClass(usuario.status) === "status-admin" 
+                              ? "#004085" 
+                              : getStatusClass(usuario.status) === "status-instructor"
+                              ? "#856404"
+                              : "#153f57ff",
                           textTransform: "uppercase",
                         }}
                       >
-                        {usuario.status || "Admin"}
+                        {formatStatus(usuario.status)}
                       </span>
                     </td>
                     <td style={{ padding: "12px", textAlign: "center" }}>
@@ -293,8 +338,8 @@ const UsuarioList = () => {
         >
           <p>Total de usuários: {usuarios.length}</p>
           <p style={{ fontSize: "12px", marginTop: "5px" }}>
-            {masked 
-              ? "Dados sensíveis estão mascarados para proteção de privacidade" 
+            {masked
+              ? "Dados sensíveis estão mascarados para proteção de privacidade"
               : "Dados sensíveis estão visíveis - use com cautela"}
           </p>
         </div>
