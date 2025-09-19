@@ -77,27 +77,36 @@ const CadastroUsuarios = () => {
       return;
     }
 
-    try {
-      const dadosParaEnviar = {
-        ...formData,
-        cargo: parseInt(formData.cargo),
-        turma: formData.turma ? parseInt(formData.turma) : null
-      };
-
-      console.log('Dados sendo enviados:', dadosParaEnviar);
-
-      const usuarioCriado = await createUsuario(dadosParaEnviar);
-      console.log('✅ Usuário salvo no Supabase:', usuarioCriado);
-
-      alert('Usuário cadastrado com sucesso!');
-      navigate('/usuarios'); // Redireciona para listagem
-    } catch (error) {
-      console.error('❌ Erro ao cadastrar usuário:', error);
-      alert('Erro ao cadastrar usuário: ' + error.message);
-    } finally {
-      setLoading(false);
+  try {
+    // Determinar o status com base no cargo selecionado
+    let status = 'ATIVO'; // Valor padrão
+    if (parseInt(formData.cargo) === 2) {
+      status = 'admin';
+    } else if (parseInt(formData.cargo) === 3) {
+      status = 'Instrutor(a)';
     }
-  };
+
+    const dadosParaEnviar = {
+      ...formData,
+      cargo: parseInt(formData.cargo),
+      turma: formData.turma ? parseInt(formData.turma) : null,
+      status: status // Adicionamos o status calculado
+    };
+
+    console.log('Dados sendo enviados:', dadosParaEnviar);
+
+    const usuarioCriado = await createUsuario(dadosParaEnviar);
+    console.log('✅ Usuário salvo no Supabase:', usuarioCriado);
+
+    alert('Usuário cadastrado com sucesso!');
+    navigate('/usuarios');
+  } catch (error) {
+    console.error('❌ Erro ao cadastrar usuário:', error);
+    alert('Erro ao cadastrar usuário: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div style={{

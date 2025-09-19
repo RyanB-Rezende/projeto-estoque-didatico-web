@@ -356,7 +356,7 @@ const EditUsuario = () => {
               required
             >
               <option value="Instrutor(a)">Instrutor(a)</option>
-              <option value="Admin">Admin</option>
+              <option value="Admin">admin</option>
             </select>
           </div>
 
