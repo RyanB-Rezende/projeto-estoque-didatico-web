@@ -6,6 +6,7 @@
 //  - isAuthenticated()
 
 import { supabase } from '../supabase/supabase.js';
+import bcrypt from 'bcryptjs';
 
 const STORAGE_KEY = 'auth_session';
 let currentSession = null;
@@ -56,8 +57,21 @@ export async function login(email, senha) {
 
   // Simplificação: ignoramos status; qualquer usuário existente pode autenticar se senha confere.
 
-  // Comparação de senha simples (plaintext) - TODO: hashing
-  if (row.senha !== senhaTrim) {
+  // Comparação de senha com suporte a hash (bcrypt) e fallback plaintext para legados
+  const senhaHash = row.senha || '';
+  let ok = false;
+  if (senhaHash.startsWith('$2a$') || senhaHash.startsWith('$2b$') || senhaHash.startsWith('$2y$')) {
+    try {
+      ok = bcrypt.compareSync(senhaTrim, senhaHash);
+    } catch (_) {
+      ok = false;
+    }
+  } else {
+    // Fallback: dados antigos sem hash
+    ok = senhaHash === senhaTrim;
+  }
+
+  if (!ok) {
     currentSession = null;
     persist();
     throw new Error('Credenciais inválidas');

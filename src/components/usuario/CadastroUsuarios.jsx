@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUsuario } from '../../services/usuario/usuarioService';
-import { getTurmas } from '../../services/turma/turmaService';
 import { getCargos } from '../../services/cargo/cargoService';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaLock } from 'react-icons/fa';
 
@@ -19,18 +18,14 @@ const CadastroUsuarios = () => {
     data_nascimento: ''
   });
 
-  const [turmas, setTurmas] = useState([]);
   const [cargos, setCargos] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const cargosData = await getCargos();
-        setCargos(cargosData);
-
-        const turmasData = await getTurmas();
-        setTurmas(turmasData);
+  const cargosData = await getCargos();
+  setCargos(cargosData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       }

@@ -130,6 +130,7 @@ export default function CadastroProduto({ onSubmit, titulo = 'Cadastro de Produt
 			role={asModal ? 'dialog' : undefined}
 			aria-modal={asModal || undefined}
 		>
+			{ /* eslint-disable-next-line jsx-a11y/no-redundant-roles */ }
 			<form
 				role="form"
 				onSubmit={handleSubmit}

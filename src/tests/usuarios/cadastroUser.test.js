@@ -131,7 +131,8 @@ describe('CadastroUsuarios', () => {
         senha: 'senha123',
         turma: null,
         cpf: '123.456.789-00',
-        data_nascimento: ''
+        data_nascimento: '',
+        status: 'ATIVO'
       });
     });
 

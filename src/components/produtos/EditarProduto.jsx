@@ -130,7 +130,8 @@ export default function EditarProduto({ id, onSuccess, onCancel, asModal = true 
       role={asModal ? 'dialog' : undefined}
       aria-modal={asModal || undefined}
     >
-      <form role="form" onSubmit={handleSubmit} noValidate className="bg-light-subtle rounded-4 shadow-lg p-4 mx-3">
+  { /* eslint-disable-next-line jsx-a11y/no-redundant-roles */ }
+  <form role="form" onSubmit={handleSubmit} noValidate className="bg-light-subtle rounded-4 shadow-lg p-4 mx-3">
         <h1 className="h5 fw-semibold mb-4">Editar Produto</h1>
         {loadingProduto ? <div className="small text-muted mb-3">Carregando...</div> : null}
         <div className="mb-3">

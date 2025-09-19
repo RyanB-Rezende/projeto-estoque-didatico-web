@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getUsuarios, updateUsuario } from '../../services/usuario/usuarioService';
+import { getUsuarioById, updateUsuario } from '../../services/usuario/usuarioService';
 import { getTurmas } from '../../services/turma/turmaService';
 import { getCargos } from '../../services/cargo/cargoService';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaLock, FaArrowLeft } from 'react-icons/fa';
@@ -72,9 +72,13 @@ const EditUsuario = () => {
     const carregarDados = async () => {
       try {
         setCarregando(true);
-        
-        const usuarios = await getUsuarios();
-        const usuario = usuarios.find(u => u.id_usuarios === parseInt(id));
+        if (process.env.NODE_ENV !== 'test') {
+          console.debug('[EditUsuario] Carregando dados para id =', id);
+        }
+  const usuario = await getUsuarioById(id);
+        if (process.env.NODE_ENV !== 'test') {
+          console.debug('[EditUsuario] Resultado da busca por ID:', usuario);
+        }
         
         if (!usuario) {
           alert('Usuário não encontrado!');
@@ -82,17 +86,29 @@ const EditUsuario = () => {
           return;
         }
 
+        // Normaliza data para o formato aceito pelo input type="date" (YYYY-MM-DD)
+        const normalizarData = (str) => {
+          if (!str) return '';
+          // Se já estiver no formato YYYY-MM-DD, retorna
+          if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+          // Tenta converter formatos comuns dd/mm/yyyy, dd-mm-yyyy
+          const m = str.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
+          if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+          // Como fallback, retorna o valor original
+          return str;
+        };
+
         setFormData({
-          nome: usuario.nome || '',
-          telefone: formatarTelefone(usuario.telefone || ''),
-          email: usuario.email || '',
-          endereco: usuario.endereco || '',
-          cargo: usuario.cargo || '',
+          nome: usuario.nome ?? '',
+          telefone: formatarTelefone(usuario.telefone ?? ''),
+          email: usuario.email ?? '',
+          endereco: usuario.endereco ?? '',
+          cargo: usuario.cargo ?? '',
           senha: '',
-          turma: usuario.turma || '',
-          cpf: formatarCPF(usuario.cpf || ''),
-          data_nascimento: usuario.data_nascimento || '',
-          status: usuario.status || ''
+          turma: usuario.turma ?? '',
+          cpf: formatarCPF(usuario.cpf ?? ''),
+          data_nascimento: normalizarData(usuario.data_nascimento ?? ''),
+          status: usuario.status ?? ''
         });
 
         const [turmasData, cargosData] = await Promise.all([
@@ -136,8 +152,10 @@ const EditUsuario = () => {
         delete dadosParaEnviar.senha;
       }
       
-      dadosParaEnviar.cargo = parseInt(dadosParaEnviar.cargo);
-      dadosParaEnviar.turma = dadosParaEnviar.turma ? parseInt(dadosParaEnviar.turma) : null;
+  const cargoParsed = Number.parseInt(dadosParaEnviar.cargo);
+  dadosParaEnviar.cargo = Number.isNaN(cargoParsed) ? dadosParaEnviar.cargo : cargoParsed;
+  const turmaParsed = dadosParaEnviar.turma ? Number.parseInt(dadosParaEnviar.turma) : null;
+  dadosParaEnviar.turma = dadosParaEnviar.turma ? (Number.isNaN(turmaParsed) ? dadosParaEnviar.turma : turmaParsed) : null;
       
       await updateUsuario(parseInt(id), dadosParaEnviar);
       

@@ -291,7 +291,7 @@ const UsuarioList = () => {
                         }}
                       >
                         <Link
-                          to={`/editar/${usuario.id_usuarios}`}
+                          to={`/usuarios/editar/${usuario.id_usuarios}`}
                           style={{
                             padding: "8px 12px",
                             backgroundColor: "#3498db",

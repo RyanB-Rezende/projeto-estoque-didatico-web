@@ -39,7 +39,7 @@ export default function CursoList() {
       : cursos;
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) setPage(totalPages);
-  }, [cursos, searchTerm]);
+  }, [cursos, searchTerm, page]);
 
   if (loading) return <div className="text-center py-4">Carregando...</div>;
   if (error) return <div className="alert alert-danger" role="alert">{error}</div>;

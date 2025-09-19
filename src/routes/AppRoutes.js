@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 // Usuários
 import CadastroUsuarios from '../components/usuario/CadastroUsuarios';
 import UsuarioList from '../components/usuario/UsuarioList';
@@ -14,6 +14,11 @@ import CadastroProduto from '../components/produtos/CadastroProduto';
 import EditarProduto from '../components/produtos/EditarProduto';
 import Home from '../components/home/Home';
 
+const LegacyEditRedirect = () => {
+  const { id } = useParams();
+  return <Navigate to={`/usuarios/editar/${id}`} replace />;
+};
+
 const AppRoutes = () => (
   <Routes>
     {/* Home / Dashboard */}
@@ -23,8 +28,8 @@ const AppRoutes = () => (
     <Route path="/cadastro" element={<CadastroUsuarios />} />
     <Route path="/usuarios" element={<UsuarioList />} />
     <Route path="/usuarios/editar/:id" element={<EditUsuario />} />
-  {/* Compat: manter antigo /editar/:id redirecionando */}
-  <Route path="/editar/:id" element={<Navigate to="/usuarios/editar/:id" replace />} />
+  {/* Compat: manter antigo /editar/:id redirecionando com preservação do ID */}
+  <Route path="/editar/:id" element={<LegacyEditRedirect />} />
 
     {/* Cursos */}
     <Route path="/cursos" element={<CursoList />} />
