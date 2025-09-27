@@ -1,10 +1,23 @@
-import { supabase } from './supabaseClient';
+import { supabase } from '../supabase/supabaseClient';
 
 export const getTurmas = async () => {
-	const { data, error } = await supabase
-		.from('turma')
-		.select('*')
-		.order('id_turma');
-	if (error) throw error;
-	return data;
+  try {
+    console.log('Buscando turmas no Supabase...');
+    
+    const { data, error } = await supabase
+      .from('turma')
+      .select('*')
+      .order('id_turma');
+
+    if (error) {
+      console.error('Erro ao buscar turmas:', error);
+      throw error;
+    }
+
+    console.log('Turmas encontradas:', data);
+    return data;
+  } catch (error) {
+    console.error('Erro completo ao buscar turmas:', error);
+    throw error;
+  }
 };
