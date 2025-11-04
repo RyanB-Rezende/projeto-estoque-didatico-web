@@ -4,6 +4,7 @@ import CadastroCurso from './CadastroCurso';
 import EditarCurso from './EditarCurso';
 import ConfirmDialog from '../common/ConfirmDialog';
 import SearchBar from '../common/SearchBar';
+import BackHomeButton from '../common/BackHomeButton';
 
 export default function CursoList() {
   const [cursos, setCursos] = useState([]);
@@ -47,6 +48,7 @@ export default function CursoList() {
   return (
     <div className="container mt-3">
       <div className="mb-3 shadow-sm bg-primary text-white px-3 py-2 rounded-bottom d-flex align-items-center gap-3">
+        <div className="me-2"><BackHomeButton /></div>
         <h2 className="h6 mb-0 flex-grow-1">Lista de Cursos</h2>
       </div>
       {/* Barra de busca com botão adicionar ao lado, como em ProdutoList */}

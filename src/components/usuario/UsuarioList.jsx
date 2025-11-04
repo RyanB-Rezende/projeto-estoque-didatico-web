@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import BackHomeButton from "../common/BackHomeButton";
 import { getUsuarios, deleteUsuario } from "../../services/usuario/usuarioService";
 
 // Funções utilitárias para formatação
@@ -155,8 +156,11 @@ const UsuarioList = () => {
             marginBottom: "2rem",
           }}
         >
-          <h2 style={{ margin: 0 }}>📋 Lista de Usuários</h2>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: 'center', gap: '10px' }}>
+            <BackHomeButton />
+            <h2 style={{ margin: 0 }}>📋 Lista de Usuários</h2>
+          </div>
+          <div style={{ display: "flex", gap: "10px", alignItems: 'center' }}>
             <button
               onClick={toggleMask}
               style={{
@@ -172,7 +176,7 @@ const UsuarioList = () => {
               {masked ? "👁️ Mostrar Dados" : "🔒 Ocultar Dados"}
             </button>
             <Link
-              to="/"
+              to="/cadastro"
               style={{
                 backgroundColor: "#27ae60",
                 color: "white",

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import './App.css';
-import Navigation from './components/common/Navigation';
 import AppRoutes from './routes/AppRoutes';
 import Login from './components/login/Login';
 import { logout, isAuthenticated } from './services/login/authService';
@@ -29,7 +28,6 @@ function App() {
           <span className="navbar-brand mb-0 h6">Estoque</span>
           <button className="btn btn-outline-secondary btn-sm" onClick={handleLogout}>Sair</button>
         </nav>
-        <Navigation />
         <AppRoutes />
       </div>
     </Router>
