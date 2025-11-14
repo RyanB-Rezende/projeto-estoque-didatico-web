@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 // Overlay panel to control sorting and facet filters
 // Props:
@@ -20,6 +20,8 @@ export default function FilterPanel({
   saldoRange = { min: 0, max: 0 },
   selectedSaldo = null,
   onChangeSaldo,
+  facetLabel = 'Filtrar por Medida',
+  showSaldoSort = true, // quando false esconde opção de ordenar por saldo (Estoque)
 }) {
   if (!open) return null;
 
@@ -63,11 +65,11 @@ export default function FilterPanel({
               <div className="d-grid gap-2">
                 <SortButton k="recent" label="Recentes" />
                 <SortButton k="alpha" label="Ordem alfabética" />
-                <SortButton k="saldo" label="Estoque" />
+                {showSaldoSort && <SortButton k="saldo" label="Estoque" />}
               </div>
             </div>
             <div className="col-12 col-md-6">
-              <div className="mb-2 small text-muted">Filtrar por Medida</div>
+              <div className="mb-2 small text-muted">{facetLabel}</div>
               <div className="d-flex flex-wrap gap-2">
                 {medidaOptions.map(opt => (
                   <div key={opt.value} className="form-check me-3">
@@ -85,53 +87,55 @@ export default function FilterPanel({
                   <span className="text-muted small">Nenhuma medida disponível</span>
                 )}
               </div>
-              {/* Dual range abaixo da medida */}
-              <div className="mt-3">
-                <div className="mb-2 small text-muted">Filtrar por Estoque (Saldo)</div>
-                <DualRange
-                  min={saldoRange.min ?? 0}
-                  max={saldoRange.max ?? 0}
-                  minValue={valMin}
-                  maxValue={valMax}
-                  onChange={(nextMin, nextMax) => onChangeSaldo?.({ min: nextMin, max: nextMax })}
-                />
-                {/* Inputs escondidos para acessibilidade/testes */}
-                <input
-                  aria-label="Estoque mínimo"
-                  type="range"
-                  min={saldoRange.min ?? 0}
-                  max={saldoRange.max ?? 0}
-                  value={valMin}
-                  onChange={(e)=>{
-                    const nextMin = Math.min(Number(e.target.value), valMax);
-                    onChangeSaldo?.({ min: nextMin, max: valMax });
-                  }}
-                  style={{ position:'absolute', opacity:0, pointerEvents:'none', width:0, height:0 }}
-                />
-                <input
-                  aria-label="Estoque máximo"
-                  type="range"
-                  min={saldoRange.min ?? 0}
-                  max={saldoRange.max ?? 0}
-                  value={valMax}
-                  onChange={(e)=>{
-                    const nextMax = Math.max(Number(e.target.value), valMin);
-                    onChangeSaldo?.({ min: valMin, max: nextMax });
-                  }}
-                  style={{ position:'absolute', opacity:0, pointerEvents:'none', width:0, height:0 }}
-                />
-                <div className="d-flex justify-content-between small text-muted mt-2">
-                  <span>{valMin}</span>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={()=> onChangeSaldo?.({ min: saldoRange.min ?? 0, max: saldoRange.max ?? 0 })}
-                  >
-                    Limpar
-                  </button>
-                  <span>{valMax}</span>
+              {/* Dual range abaixo da medida (exibido somente quando há manipulador de saldo) */}
+              {typeof onChangeSaldo === 'function' && saldoRange && (typeof saldoRange.min === 'number') && (typeof saldoRange.max === 'number') && (
+                <div className="mt-3">
+                  <div className="mb-2 small text-muted">Filtrar por Estoque (Saldo)</div>
+                  <DualRange
+                    min={saldoRange.min ?? 0}
+                    max={saldoRange.max ?? 0}
+                    minValue={valMin}
+                    maxValue={valMax}
+                    onChange={(nextMin, nextMax) => onChangeSaldo?.({ min: nextMin, max: nextMax })}
+                  />
+                  {/* Inputs escondidos para acessibilidade/testes */}
+                  <input
+                    aria-label="Estoque mínimo"
+                    type="range"
+                    min={saldoRange.min ?? 0}
+                    max={saldoRange.max ?? 0}
+                    value={valMin}
+                    onChange={(e)=>{
+                      const nextMin = Math.min(Number(e.target.value), valMax);
+                      onChangeSaldo?.({ min: nextMin, max: valMax });
+                    }}
+                    style={{ position:'absolute', opacity:0, pointerEvents:'none', width:0, height:0 }}
+                  />
+                  <input
+                    aria-label="Estoque máximo"
+                    type="range"
+                    min={saldoRange.min ?? 0}
+                    max={saldoRange.max ?? 0}
+                    value={valMax}
+                    onChange={(e)=>{
+                      const nextMax = Math.max(Number(e.target.value), valMin);
+                      onChangeSaldo?.({ min: valMin, max: nextMax });
+                    }}
+                    style={{ position:'absolute', opacity:0, pointerEvents:'none', width:0, height:0 }}
+                  />
+                  <div className="d-flex justify-content-between small text-muted mt-2">
+                    <span>{valMin}</span>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary"
+                      onClick={()=> onChangeSaldo?.({ min: saldoRange.min ?? 0, max: saldoRange.max ?? 0 })}
+                    >
+                      Limpar
+                    </button>
+                    <span>{valMax}</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -153,7 +157,7 @@ function DualRange({ min = 0, max = 0, minValue, maxValue, onChange }) {
     return ((v - min) / range) * 100;
   };
 
-  const onPointerMove = (clientX) => {
+  const onPointerMove = useCallback((clientX) => {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return;
     const ratio = (clientX - rect.left) / rect.width;
@@ -166,7 +170,7 @@ function DualRange({ min = 0, max = 0, minValue, maxValue, onChange }) {
       const nextMax = Math.max(value, minValue);
       if (nextMax !== maxValue) onChange?.(minValue, nextMax);
     }
-  };
+  }, [drag, maxValue, min, minValue, onChange, range]);
 
   useEffect(() => {
     const onMouseMove = (e) => {
@@ -182,7 +186,7 @@ function DualRange({ min = 0, max = 0, minValue, maxValue, onChange }) {
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
     };
-  }, [drag, min, max, minValue, maxValue]);
+  }, [drag, min, max, minValue, maxValue, onPointerMove]);
 
   // Touch support
   useEffect(() => {
@@ -198,7 +202,7 @@ function DualRange({ min = 0, max = 0, minValue, maxValue, onChange }) {
       window.addEventListener('touchend', onTouchEnd, { once: true });
     }
     return () => window.removeEventListener('touchmove', onTouchMove);
-  }, [drag, min, max, minValue, maxValue]);
+  }, [drag, min, max, minValue, maxValue, onPointerMove]);
 
   const leftPct = percentFromValue(minValue);
   const rightPct = percentFromValue(maxValue);
