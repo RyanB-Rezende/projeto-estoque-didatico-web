@@ -17,6 +17,7 @@ function App() {
     setSession(null);
   };
 
+  // Default: require login for the rest
   if (!session || !isAuthenticated()) {
     return <Login onSuccess={handleLoginSuccess} />;
   }

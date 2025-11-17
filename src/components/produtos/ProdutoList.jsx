@@ -8,6 +8,7 @@ import { filterByTerm } from '../common/filters/searchUtils';
 import FilterPanel from '../common/filters/FilterPanel';
 import BackHomeButton from '../common/BackHomeButton';
 import { sortItems, cmpString, cmpNumber, cmpDateOrId } from '../common/filters/sortUtils';
+import { getSession } from '../../services/login/authService';
 
 // Componente de listagem simples de produtos (versão mínima para atender testes RED -> GREEN)
 // Requisitos cobertos pelos testes:
@@ -17,6 +18,8 @@ import { sortItems, cmpString, cmpNumber, cmpDateOrId } from '../common/filters/
 // Campos básicos exibidos: nome, medida, saldo (demais simplificados ou placeholders).
 
 export default function ProdutoList() {
+	const session = getSession();
+	const isAdmin = (session?.user?.status || '').toLowerCase().includes('admin');
 	const [produtos, setProdutos] = useState([]);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [loading, setLoading] = useState(true);
@@ -233,6 +236,11 @@ export default function ProdutoList() {
 				<div className="me-2"><BackHomeButton /></div>
 				<h2 className="h6 mb-0 flex-grow-1" style={{letterSpacing:'0.4px'}}>Lista de Produtos</h2>
 			</div>
+			{isAdmin && (
+				<div className="alert alert-primary py-2" role="note" style={{fontSize:'0.75rem'}}>
+					Clique em uma linha de produto para registrar ou visualizar movimentações.
+				</div>
+			)}
 
 			{/* Barra de busca com botão adicionar alinhado à direita (estilo card arredondado) */}
 				<div className="mb-3" style={{background:'#ffffff', borderRadius:'30px', padding:'10px 18px', boxShadow:'0 1px 3px rgba(0,0,0,0.08)', display:'flex', alignItems:'center', gap:'12px'}}>
@@ -278,32 +286,37 @@ export default function ProdutoList() {
 						</tr>
 					</thead>
 						<tbody>
-								{visible.map(p => (
-									<tr key={p.id_produtos}>
-										<td><strong>{p.nome}</strong></td>
-										<td>{p.codigo ?? ''}</td>
-										<td>{medidasMap[p.medida] || p.medida}</td>
-										<td>{p.saldo}</td>
-										<td className="text-end d-flex justify-content-end gap-2">
-											<button
-												type="button"
-												className="btn btn-outline-primary btn-sm"
-												title="Editar"
-												onClick={() => setEditing(p)}
-											>
-												<i className="bi bi-pencil"></i>
-											</button>
-											<button
-												type="button"
-												className="btn btn-outline-danger btn-sm"
-												title="Remover"
-												onClick={() => requestDelete(p)}
-											>
-												<i className="bi bi-trash"></i>
-											</button>
-										</td>
-									</tr>
-								))}
+							{visible.map(p => (
+								<tr
+									key={p.id_produtos}
+									onClick={() => { if (isAdmin) { try { window.location.assign(`/movimentacoes/${p.id_produtos}`); } catch(_) {} } }}
+									style={isAdmin ? { cursor:'pointer' } : undefined}
+									title={isAdmin ? 'Ver Movimentações' : undefined}
+								>
+									<td><strong>{p.nome}</strong></td>
+									<td>{p.codigo ?? ''}</td>
+									<td>{medidasMap[p.medida] || p.medida}</td>
+									<td>{p.saldo}</td>
+									<td className="text-end d-flex justify-content-end gap-2" onClick={e=> e.stopPropagation()}>
+										<button
+											type="button"
+											className="btn btn-outline-primary btn-sm"
+											title="Editar"
+											onClick={(e) => { e.stopPropagation(); setEditing(p); }}
+										>
+											<i className="bi bi-pencil"></i>
+										</button>
+										<button
+											type="button"
+											className="btn btn-outline-danger btn-sm"
+											title="Remover"
+											onClick={(e) => { e.stopPropagation(); requestDelete(p); }}
+										>
+											<i className="bi bi-trash"></i>
+										</button>
+									</td>
+								</tr>
+							))}
 						</tbody>
 				</table>
 			</div>

@@ -66,7 +66,6 @@ describe('CadastroUsuarios', () => {
   };
 
   const fillForm = async (user) => {
-    // Aguarda o carregamento dos dados
     await waitFor(() => {
       expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
@@ -76,7 +75,8 @@ describe('CadastroUsuarios', () => {
     await user.type(screen.getByPlaceholderText(/telefone/i), '11999999999');
     await user.type(screen.getByPlaceholderText(/cpf/i), '12345678900');
     await user.type(screen.getByPlaceholderText(/endereço/i), 'Rua A, 123');
-    await user.type(screen.getByPlaceholderText(/senha/i), 'senha123');
+    await user.type(screen.getByPlaceholderText(/^Senha$/i), 'senha123');
+    await user.type(screen.getByPlaceholderText(/confirmar senha/i), 'senha123');
     
     // Seleciona o cargo
     fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });

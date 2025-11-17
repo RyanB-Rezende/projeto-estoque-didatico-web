@@ -35,7 +35,7 @@ export async function login(email, senha) {
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('id_usuarios, email, senha, nome') // status removido: simplificação solicitada
+      .select('id_usuarios, email, senha, nome, status')
       .eq('email', emailTrim)
       .single();
     if (error) {
@@ -81,7 +81,8 @@ export async function login(email, senha) {
     user: {
       id: row.id_usuarios,
       email: row.email,
-      nome: row.nome
+      nome: row.nome,
+      status: row.status || ''
     },
     token: 'tok_' + Math.random().toString(36).slice(2)
   };
