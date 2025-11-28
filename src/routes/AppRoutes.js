@@ -19,6 +19,9 @@ import MovimentacaoPage from '../components/movimentacao/MovimentacaoPage.jsx';
 import Progresso from '../components/instrutor/Progresso.jsx';
 import Solicitacoes from '../components/instrutor/Solicitacoes.jsx';
 import { getSession } from '../services/login/authService';
+// Turmas
+import TurmaList from '../components/turma/TurmaList.jsx';
+import NotifyPage from '../components/notify/NotifyPage.jsx';
 
 const LegacyEditRedirect = () => {
   const { id } = useParams();
@@ -56,6 +59,10 @@ const AppRoutes = () => (
     <Route path="/produtos/editar/:id" element={<RequireAdmin><EditarProduto /></RequireAdmin>} />
     {/* Movimentações de produto (admin) */}
     <Route path="/movimentacoes/:id" element={<RequireAdmin><MovimentacaoPage /></RequireAdmin>} />
+    {/* Turmas (admin) */}
+    <Route path="/turmas" element={<RequireAdmin><TurmaList /></RequireAdmin>} />
+    {/* Notify (admin) */}
+    <Route path="/notify" element={<RequireAdmin><NotifyPage /></RequireAdmin>} />
 
     {/* Páginas do instrutor (e admin) */}
     <Route path="/progresso" element={<Progresso />} />

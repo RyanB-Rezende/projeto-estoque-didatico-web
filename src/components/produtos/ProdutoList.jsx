@@ -129,6 +129,79 @@ export default function ProdutoList() {
 		setTimeout(() => setToast(null), 3200);
 	};
 
+	// --- PDF ---
+	const loadScript = (src) => new Promise((resolve, reject) => {
+		const s = document.createElement('script');
+		s.src = src;
+		s.async = true;
+		s.onload = resolve;
+		s.onerror = () => reject(new Error('Falha ao carregar ' + src));
+		document.head.appendChild(s);
+	});
+
+	const ensureJsPDF = async () => {
+		if (!window.jspdf || !window.jspdf.jsPDF) {
+			await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+		}
+		if (!window.jspdf_AutoTable && !window.jspdf?.jsPDF?.API?.autoTable) {
+			await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js');
+		}
+	};
+
+	const handleExportPDF = async () => {
+		try {
+			await ensureJsPDF();
+			const { jsPDF } = window.jspdf;
+			const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+			const now = new Date();
+			const pad2 = n => String(n).padStart(2, '0');
+			const ts = `${pad2(now.getDate())}/${pad2(now.getMonth()+1)}/${now.getFullYear()} ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
+
+			// Header
+			doc.setFontSize(12);
+			doc.setFont(undefined, 'bold');
+			doc.text('Relatório de Produtos', 40, 40);
+			doc.setFont(undefined, 'normal');
+			doc.setFontSize(10);
+			doc.text(ts, doc.internal.pageSize.getWidth() - 40, 40, { align: 'right' });
+
+			// Table data
+			const headers = ['Código','Produto','Medida','Local','Entrada','Saída','Saldo'];
+			const body = produtos.map(p => [
+				p.codigo ?? '-',
+				p.nome ?? '-',
+				medidasMap[p.medida] || p.medida || '-',
+				p.local ?? '-',
+				String(p.entrada ?? 0),
+				String(p.saida ?? 0),
+				String(p.saldo ?? 0),
+			]);
+
+			const startY = 60;
+			doc.autoTable({
+				head: [headers],
+				body,
+				startY,
+				styles: { fontSize: 9 },
+				headStyles: { fillColor: [224,224,224], textColor: 20, fontStyle: 'bold' },
+				columnStyles: {
+					0: { cellWidth: 70 },
+					1: { cellWidth: 'auto' },
+					2: { cellWidth: 50 },
+					3: { cellWidth: 'auto' },
+					4: { cellWidth: 50, halign: 'right' },
+					5: { cellWidth: 50, halign: 'right' },
+					6: { cellWidth: 50, halign: 'right' },
+				},
+				margin: { left: 40, right: 40 },
+			});
+
+			doc.save('relatorio_produtos.pdf');
+		} catch (e) {
+			showToast('Falha ao gerar PDF', 'danger');
+		}
+	};
+
 	const handleAddSuccess = async (novo) => {
 		setShowAdd(false);
 		showToast(`Produto "${novo?.nome || 'Novo'}" cadastrado`, 'success');
@@ -258,6 +331,14 @@ export default function ProdutoList() {
 						aria-label="Filtrar e Ordenar"
 					>
 						Filtros
+					</button>
+					<button
+						type="button"
+						className="btn btn-outline-primary btn-sm"
+						onClick={handleExportPDF}
+						aria-label="Exportar PDF"
+					>
+						PDF
 					</button>
 				<button
 					type="button"
