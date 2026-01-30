@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.css": "/static/css/main.f5d0920e.css",
-    "main.js": "/static/js/main.9f545fda.js",
-    "static/js/453.d58f2646.chunk.js": "/static/js/453.d58f2646.chunk.js",
-    "static/media/bootstrap-icons.woff?": "/static/media/bootstrap-icons.1295669cd4e305c97f2c.woff",
-    "static/media/bootstrap-icons.woff2?": "/static/media/bootstrap-icons.92ea18a81d737146ff04.woff2",
-    "static/media/senac.png": "/static/media/senac.d69ae76106eceaea4a67.png",
-    "index.html": "/index.html",
-    "main.f5d0920e.css.map": "/static/css/main.f5d0920e.css.map",
-    "main.9f545fda.js.map": "/static/js/main.9f545fda.js.map",
-    "453.d58f2646.chunk.js.map": "/static/js/453.d58f2646.chunk.js.map"
+    "main.css": "/projeto-estoque-didatico-web/static/css/main.022cc94d.css",
+    "main.js": "/projeto-estoque-didatico-web/static/js/main.c439252f.js",
+    "static/js/453.d58f2646.chunk.js": "/projeto-estoque-didatico-web/static/js/453.d58f2646.chunk.js",
+    "static/media/bootstrap-icons.woff?": "/projeto-estoque-didatico-web/static/media/bootstrap-icons.1295669cd4e305c97f2c.woff",
+    "static/media/bootstrap-icons.woff2?": "/projeto-estoque-didatico-web/static/media/bootstrap-icons.92ea18a81d737146ff04.woff2",
+    "static/media/senac.png": "/projeto-estoque-didatico-web/static/media/senac.d69ae76106eceaea4a67.png",
+    "index.html": "/projeto-estoque-didatico-web/index.html",
+    "main.022cc94d.css.map": "/projeto-estoque-didatico-web/static/css/main.022cc94d.css.map",
+    "main.c439252f.js.map": "/projeto-estoque-didatico-web/static/js/main.c439252f.js.map",
+    "453.d58f2646.chunk.js.map": "/projeto-estoque-didatico-web/static/js/453.d58f2646.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f5d0920e.css",
-    "static/js/main.9f545fda.js"
+    "static/css/main.022cc94d.css",
+    "static/js/main.c439252f.js"
   ]
 }
