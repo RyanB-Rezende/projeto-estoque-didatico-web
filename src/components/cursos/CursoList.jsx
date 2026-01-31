@@ -4,6 +4,9 @@ import CadastroCurso from './CadastroCurso';
 import EditarCurso from './EditarCurso';
 import ConfirmDialog from '../common/ConfirmDialog';
 import SearchBar from '../common/SearchBar';
+import BackHomeButton from '../common/BackHomeButton';
+import FilterPanel from '../common/filters/FilterPanel';
+import { sortItems, cmpString, cmpDateOrId } from '../common/filters/sortUtils';
 
 export default function CursoList() {
   const [cursos, setCursos] = useState([]);
@@ -14,6 +17,9 @@ export default function CursoList() {
   const [confirming, setConfirming] = useState(null); // curso a excluir
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  // Em cursos mantemos ordem crescente por ID (para testes) como "recent" asc
+  const [sort, setSort] = useState({ key: 'recent', dir: 'asc' });
+  const [filterOpen, setFilterOpen] = useState(false);
   const PAGE_SIZE = 25;
 
   const loadCursos = async () => {
@@ -34,12 +40,19 @@ export default function CursoList() {
 
   // Ajusta página quando a lista muda
   useEffect(() => {
-    const filtered = searchTerm
+    const filteredBase = searchTerm
       ? cursos.filter(c => (c.nome || '').toLowerCase().includes(searchTerm.toLowerCase()))
       : cursos;
+    // aplica ordenação (recent -> id desc/asc; alpha -> nome)
+    const comparator = (
+      sort.key === 'alpha'
+        ? cmpString(c=>c.nome, sort.dir==='asc'?1:-1)
+        : cmpDateOrId(c=> c.id_cursos, sort.dir==='asc'?1:-1)
+    );
+    const filtered = sortItems(filteredBase, comparator);
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) setPage(totalPages);
-  }, [cursos, searchTerm]);
+  }, [cursos, searchTerm, page]);
 
   if (loading) return <div className="text-center py-4">Carregando...</div>;
   if (error) return <div className="alert alert-danger" role="alert">{error}</div>;
@@ -47,6 +60,7 @@ export default function CursoList() {
   return (
     <div className="container mt-3">
       <div className="mb-3 shadow-sm bg-primary text-white px-3 py-2 rounded-bottom d-flex align-items-center gap-3">
+        <div className="me-2"><BackHomeButton /></div>
         <h2 className="h6 mb-0 flex-grow-1">Lista de Cursos</h2>
       </div>
       {/* Barra de busca com botão adicionar ao lado, como em ProdutoList */}
@@ -58,6 +72,14 @@ export default function CursoList() {
             showAddButton={false}
           />
         </div>
+        <button
+          type="button"
+          className="btn btn-outline-secondary btn-sm"
+          onClick={()=> setFilterOpen(true)}
+          aria-label="Filtrar e Ordenar"
+        >
+          Filtros
+        </button>
         <div>
           <button
             type="button"
@@ -72,9 +94,15 @@ export default function CursoList() {
 
       {/* Calcular filtro/paginação e renderizar tabela única */}
       {(() => {
-        const filtered = searchTerm
+        const filteredBase = searchTerm
           ? cursos.filter(c => (c.nome || '').toLowerCase().includes(searchTerm.toLowerCase()))
           : cursos;
+        const comparator = (
+          sort.key === 'alpha'
+            ? cmpString(c=>c.nome, sort.dir==='asc'?1:-1)
+            : cmpDateOrId(c=> c.id_cursos, sort.dir==='asc'?1:-1)
+        );
+        const filtered = sortItems(filteredBase, comparator);
         const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
         const start = (page - 1) * PAGE_SIZE;
         const visible = filtered.slice(start, start + PAGE_SIZE);
@@ -195,6 +223,17 @@ export default function CursoList() {
           onConfirm={async ()=>{ try { await deleteCurso(confirming.id_cursos); } finally { setConfirming(null); await loadCursos(); } }}
         />
       )}
+      <FilterPanel
+        open={filterOpen}
+        onClose={()=> setFilterOpen(false)}
+        sort={sort}
+        onChangeSort={setSort}
+        medidaOptions={[]} // cursos não possuem facet adicional agora
+        selectedMedidas={[]}
+        onToggleMedida={()=>{}}
+        facetLabel=""
+        showSaldoSort={false}
+      />
     </div>
   );
 }

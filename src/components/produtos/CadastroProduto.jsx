@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../services/supabase/supabaseClient';
+import { supabase } from '../../services/supabase/supabase.js';
 import { addProduto } from '../../services/produtos/produtosService';
 
 // Função de domínio (será expandida com persistência Supabase em testes futuros)
@@ -130,6 +130,7 @@ export default function CadastroProduto({ onSubmit, titulo = 'Cadastro de Produt
 			role={asModal ? 'dialog' : undefined}
 			aria-modal={asModal || undefined}
 		>
+			{ /* eslint-disable-next-line jsx-a11y/no-redundant-roles */ }
 			<form
 				role="form"
 				onSubmit={handleSubmit}

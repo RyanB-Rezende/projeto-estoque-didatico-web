@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createUsuario } from '../../services/usuario/usuarioService';
-import { getTurmas } from '../../services/turma/turmaService';
 import { getCargos } from '../../services/cargo/cargoService';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaMapMarkerAlt, FaLock } from 'react-icons/fa';
 
@@ -14,23 +13,22 @@ const CadastroUsuarios = () => {
     endereco: '',
     cargo: '',
     senha: '',
+    confirmarSenha: '',
     turma: '',
     cpf: '',
     data_nascimento: ''
   });
 
-  const [turmas, setTurmas] = useState([]);
   const [cargos, setCargos] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showErrors, setShowErrors] = useState(false);
 
   useEffect(() => {
     const carregarDados = async () => {
       try {
-        const cargosData = await getCargos();
-        setCargos(cargosData);
-
-        const turmasData = await getTurmas();
-        setTurmas(turmasData);
+  const cargosData = await getCargos();
+  setCargos(cargosData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       }
@@ -64,40 +62,99 @@ const CadastroUsuarios = () => {
       ...prev,
       [name]: value
     }));
+
+    // Revalida campo específico e regras dependentes (senha confirmada)
+    setErrors(prev => {
+      const next = { ...prev };
+      if (showErrors) {
+        // Campos obrigatórios
+        ['nome','email','telefone','cpf','endereco','cargo','senha','confirmarSenha'].forEach(c => {
+          if (c === name) {
+            if (!value || value.trim() === '') next[c] = 'Obrigatório'; else delete next[c];
+          }
+        });
+        // Revalida máscara CPF/telefone se desejar (placeholder simplificado)
+        if (name === 'telefone' && value && value.replace(/\D/g,'').length < 10) next.telefone = 'Telefone incompleto';
+        if (name === 'cpf' && value && value.replace(/\D/g,'').length < 11) next.cpf = 'CPF incompleto';
+        // Senha mismatch
+        const senhaVal = name === 'senha' ? value : formData.senha;
+        const confVal = name === 'confirmarSenha' ? value : formData.confirmarSenha;
+        if (senhaVal && confVal && senhaVal !== confVal) {
+          next.senha = 'Senhas diferentes';
+          next.confirmarSenha = 'Senhas diferentes';
+        } else {
+          if (next.senha === 'Senhas diferentes') delete next.senha;
+          if (next.confirmarSenha === 'Senhas diferentes') delete next.confirmarSenha;
+        }
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setShowErrors(true);
 
-    // Validação básica
-    if (!formData.nome || !formData.email || !formData.telefone || !formData.cpf || !formData.endereco || !formData.cargo || !formData.senha) {
-      alert('Por favor, preencha todos os campos obrigatórios!');
+    // Construir mapa de erros obrigatório
+    const currentErrors = {};
+    ['nome','email','telefone','cpf','endereco','cargo','senha','confirmarSenha'].forEach(c => {
+      if (!formData[c] || formData[c].trim() === '') currentErrors[c] = 'Obrigatório';
+    });
+    if (formData.telefone && formData.telefone.replace(/\D/g,'').length < 10) currentErrors.telefone = 'Telefone incompleto';
+    if (formData.cpf && formData.cpf.replace(/\D/g,'').length < 11) currentErrors.cpf = 'CPF incompleto';
+    if (formData.senha && formData.confirmarSenha && formData.senha !== formData.confirmarSenha) {
+      currentErrors.senha = 'Senhas diferentes';
+      currentErrors.confirmarSenha = 'Senhas diferentes';
+    }
+    setErrors(currentErrors);
+
+    if (Object.keys(currentErrors).length > 0) {
+      const values = Object.values(currentErrors);
+      const mismatch = values.includes('Senhas diferentes');
+      const hasMissing = values.includes('Obrigatório');
+      const allMissing = hasMissing && values.every(v => v === 'Obrigatório');
+      const message = mismatch
+        ? 'As senhas não conferem. Confirme a senha corretamente.'
+        : allMissing
+        ? 'Por favor, preencha todos os campos obrigatórios!'
+        : 'Por favor, corrija os campos destacados.';
+      alert(message);
       setLoading(false);
       return;
     }
 
-    try {
-      const dadosParaEnviar = {
-        ...formData,
-        cargo: parseInt(formData.cargo),
-        turma: formData.turma ? parseInt(formData.turma) : null
-      };
-
-      console.log('Dados sendo enviados:', dadosParaEnviar);
-
-      const usuarioCriado = await createUsuario(dadosParaEnviar);
-      console.log('✅ Usuário salvo no Supabase:', usuarioCriado);
-
-      alert('Usuário cadastrado com sucesso!');
-      navigate('/usuarios'); // Redireciona para listagem
-    } catch (error) {
-      console.error('❌ Erro ao cadastrar usuário:', error);
-      alert('Erro ao cadastrar usuário: ' + error.message);
-    } finally {
-      setLoading(false);
+  try {
+    // Determinar o status com base no cargo selecionado
+    let status = 'ATIVO'; // Valor padrão
+    if (parseInt(formData.cargo) === 2) {
+      status = 'admin';
+    } else if (parseInt(formData.cargo) === 3) {
+      status = 'Instrutor(a)';
     }
-  };
+
+    const { confirmarSenha, ...rest } = formData;
+    const dadosParaEnviar = {
+      ...rest,
+      cargo: parseInt(formData.cargo),
+      turma: formData.turma ? parseInt(formData.turma) : null,
+      status: status // Adicionamos o status calculado
+    };
+
+    console.log('Dados sendo enviados:', dadosParaEnviar);
+
+    const usuarioCriado = await createUsuario(dadosParaEnviar);
+    console.log('✅ Usuário salvo no Supabase:', usuarioCriado);
+
+    alert('Usuário cadastrado com sucesso!');
+    navigate('/usuarios');
+  } catch (error) {
+    console.error('❌ Erro ao cadastrar usuário:', error);
+    alert('Erro ao cadastrar usuário: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div style={{
@@ -134,7 +191,7 @@ const CadastroUsuarios = () => {
         <h2 style={{ marginBottom: '1.5rem', color: '#333' }}>Cadastro de Usuário</h2>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.nome? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaUser style={iconStyle} />
             <input 
               type="text" 
@@ -147,7 +204,7 @@ const CadastroUsuarios = () => {
             />
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.email? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaEnvelope style={iconStyle} />
             <input 
               type="email" 
@@ -160,7 +217,7 @@ const CadastroUsuarios = () => {
             />
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.telefone? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaPhone style={iconStyle} />
             <input 
               type="text" 
@@ -174,7 +231,7 @@ const CadastroUsuarios = () => {
             />
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.cpf? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaIdCard style={iconStyle} />
             <input 
               type="text" 
@@ -188,7 +245,7 @@ const CadastroUsuarios = () => {
             />
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.endereco? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaMapMarkerAlt style={iconStyle} />
             <input 
               type="text" 
@@ -201,7 +258,7 @@ const CadastroUsuarios = () => {
             />
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.cargo? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaUser style={iconStyle} />
             <select 
               name="cargo" 
@@ -219,7 +276,7 @@ const CadastroUsuarios = () => {
             </select>
           </div>
 
-          <div style={inputGroup}>
+          <div style={{...inputGroup, border: errors.senha? '1px solid #dc3545':'1px solid #ddd'}}>
             <FaLock style={iconStyle} />
             <input 
               type="password" 
@@ -231,6 +288,26 @@ const CadastroUsuarios = () => {
               required 
             />
           </div>
+
+          <div style={{...inputGroup, border: errors.confirmarSenha? '1px solid #dc3545':'1px solid #ddd'}}>
+            <FaLock style={iconStyle} />
+            <input 
+              type="password" 
+              name="confirmarSenha" 
+              value={formData.confirmarSenha} 
+              onChange={handleChange} 
+              placeholder="Confirmar senha" 
+              style={inputStyle} 
+              required 
+              aria-invalid={formData.confirmarSenha && formData.senha !== formData.confirmarSenha}
+            />
+          </div>
+
+          {showErrors && Object.keys(errors).length > 0 && (
+            <div style={{ color:'#dc3545', fontSize:12, textAlign:'left' }} role="alert">
+              {errors.confirmarSenha === 'Senhas diferentes' || errors.senha === 'Senhas diferentes' ? 'As senhas não conferem.' : 'Verifique os campos obrigatórios.'}
+            </div>
+          )}
 
           <button 
             type="submit" 

@@ -53,6 +53,7 @@ export default function EditarCurso({ id, onSuccess, onCancel, asModal = false }
   if (error) return <div className="alert alert-danger" role="alert">Erro ao carregar curso</div>;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-redundant-roles
     <form role="form" onSubmit={handleSubmit} noValidate className={asModal ? '' : ''}>
       <div className="mb-3">
         <label htmlFor="nome" className="form-label">Nome do Curso</label>

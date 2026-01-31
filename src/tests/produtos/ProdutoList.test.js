@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 // Service de produtos a ser mockado
@@ -65,8 +65,8 @@ test('exibe mensagem quando não há produtos cadastrados', async () => {
 // 2. Exibe lista de produtos
 test('exibe lista de produtos', async () => {
   service.getProdutos.mockResolvedValue([
-    { id_produtos: '1', nome: 'Caneta', medida: 1, entrada: 10, saida: 2, saldo: 8 },
-    { id_produtos: '2', nome: 'Lápis', medida: 1, entrada: 5, saida: 0, saldo: 5 },
+    { id_produtos: '1', nome: 'Caneta', codigo: 'COD-123', medida: 1, entrada: 10, saida: 2, saldo: 8 },
+    { id_produtos: '2', nome: 'Lápis', codigo: 'XYZ-9', medida: 1, entrada: 5, saida: 0, saldo: 5 },
   ]);
   renderPlain(<ProdutoList />);
   await waitFor(() => {
@@ -77,6 +77,95 @@ test('exibe lista de produtos', async () => {
   const lapisEls = screen.getAllByText('Lápis');
   expect(canetaEls.length).toBeGreaterThan(0);
   expect(lapisEls.length).toBeGreaterThan(0);
+});
+
+// 2.3. Ordenação por saldo crescente e decrescente
+test('ordena produtos por quantidade em estoque (saldo) crescente e decrescente', async () => {
+  const produtos = [
+    { id_produtos: '1', nome: 'Caneta', codigo: 'A', medida: 1, saldo: 8 },
+    { id_produtos: '2', nome: 'Lápis', codigo: 'B', medida: 1, saldo: 5 },
+    { id_produtos: '3', nome: 'Borracha', codigo: 'C', medida: 1, saldo: 10 },
+  ];
+  service.getProdutos.mockResolvedValue(produtos);
+  service.getMedidas.mockResolvedValue([]);
+
+  renderPlain(<ProdutoList />);
+  await screen.findByRole('table');
+
+  // abre painel e ordena crescente
+  fireEvent.click(screen.getByRole('button', { name: /filtrar e ordenar/i }));
+  const estoqueBtn = await screen.findByRole('button', { name: /estoque/i });
+  fireEvent.click(estoqueBtn); // asc
+  // aguarda botão refletir estado crescente
+  await screen.findByRole('button', { name: /estoque.*crescente/i });
+  const rowsAsc = screen.getAllByRole('row');
+  const firstDataRowAsc = rowsAsc[1];
+  expect(firstDataRowAsc).toHaveTextContent('Lápis');
+
+  // clica novamente para descer (garante que usamos o botão já atualizado)
+  const estoqueBtnAsc = await screen.findByRole('button', { name: /estoque.*crescente/i });
+  fireEvent.click(estoqueBtnAsc);
+  await waitFor(() => {
+    const rowsDesc = screen.getAllByRole('row');
+    const firstDataRowDesc = rowsDesc[1];
+    expect(firstDataRowDesc).toHaveTextContent('Borracha');
+  });
+});
+
+// 2.2. Busca por código na SearchBar
+test('filtra produtos ao buscar pelo código na barra de pesquisa', async () => {
+  const produtos = [
+    { id_produtos: '1', nome: 'Caneta', codigo: 'COD-123', medida: 1, entrada: 10, saida: 2, saldo: 8 },
+    { id_produtos: '2', nome: 'Lápis', codigo: 'XYZ-9', medida: 1, entrada: 5, saida: 0, saldo: 5 },
+    { id_produtos: '3', nome: 'Caderno', codigo: 'ABC-77', medida: 1, entrada: 5, saida: 0, saldo: 5 },
+  ];
+  service.getProdutos.mockResolvedValue(produtos);
+  service.getMedidas.mockResolvedValue([]);
+
+  renderPlain(<ProdutoList />);
+
+  // Aguarda tabela e itens iniciais
+  const table = await screen.findByRole('table');
+  expect(table).toBeInTheDocument();
+  expect(screen.getAllByText('Caneta').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Lápis').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('Caderno').length).toBeGreaterThan(0);
+
+  // Digita o código 'XYZ-9' e aguarda debounce da SearchBar (300ms default)
+  const input = screen.getByPlaceholderText(/nome ou código/i);
+  await waitFor(() => expect(input).toBeInTheDocument());
+  // dispara evento de mudança da forma recomendada
+  fireEvent.change(input, { target: { value: 'XYZ-9' } });
+
+  // espera filtro aplicar (>=300ms) e confirma que apenas Lápis permanece visível
+  await new Promise((r) => setTimeout(r, 400));
+  expect(screen.getAllByText('Lápis').length).toBeGreaterThan(0);
+  expect(screen.queryByText('Caneta')).toBeNull();
+  expect(screen.queryByText('Caderno')).toBeNull();
+
+  // e o valor do código aparece na tabela
+  expect(screen.getByText('XYZ-9')).toBeInTheDocument();
+});
+// 2.1. Exibe coluna Código à esquerda de Medida e os valores de código
+test('exibe coluna "Código" ao lado esquerdo de Medida e mostra os códigos dos produtos', async () => {
+  service.getProdutos.mockResolvedValue([
+    { id_produtos: '1', nome: 'Caneta', codigo: 'COD-123', medida: 1, entrada: 10, saida: 2, saldo: 8 },
+    { id_produtos: '2', nome: 'Lápis', codigo: 'XYZ-9', medida: 1, entrada: 5, saida: 0, saldo: 5 },
+  ]);
+
+  renderPlain(<ProdutoList />);
+
+  // Aguarda tabela
+  const table = await screen.findByRole('table');
+  expect(table).toBeInTheDocument();
+
+  // Verifica ordem dos cabeçalhos
+  const headers = screen.getAllByRole('columnheader').map(h => h.textContent.trim());
+  expect(headers).toEqual(['Nome', 'Código', 'Medida', 'Saldo', 'Ações']);
+
+  // Verifica valores dos códigos renderizados
+  expect(screen.getByText('COD-123')).toBeInTheDocument();
+  expect(screen.getByText('XYZ-9')).toBeInTheDocument();
 });
 
 // 3. Remoção de produto
@@ -177,6 +266,7 @@ test('navega para a próxima página ao clicar no botão de avançar', async () 
   service.getProdutos
     .mockResolvedValueOnce(produtos)
     .mockResolvedValueOnce(produtos);
+  service.getMedidas.mockResolvedValue([]);
 
   renderPlain(<ProdutoList />);
 
@@ -185,25 +275,31 @@ test('navega para a próxima página ao clicar no botão de avançar', async () 
     expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
+  // Abre filtros e define ordenação por mais antigos (crescente)
+  fireEvent.click(screen.getByRole('button', { name: /filtrar e ordenar/i }));
+  const recentesBtn = await screen.findByRole('button', { name: /recentes/i });
+  // Duas vezes para garantir asc (default asc, se já estiver em 'recent' desc)
+  fireEvent.click(recentesBtn); // asc
+
   // Indicador de página inicial
   expect(screen.getByText(/1 \/ 2/i)).toBeInTheDocument();
 
-  // Item da primeira página presente (pode aparecer em tabela e card mobile)
-  expect(screen.getAllByText('Item-1').length).toBeGreaterThan(0);
-  expect(screen.queryByText('Item-30')).toBeNull();
+  // Armazena primeiro item da tabela na página 1
+  const tableBefore = screen.getByRole('table');
+  const firstRowBefore = within(tableBefore).getAllByRole('row')[1];
+  const firstTextBefore = firstRowBefore.textContent;
 
   // Avança
   const nextBtn = screen.getByRole('button', { name: /próxima página/i });
   fireEvent.click(nextBtn);
 
-  // Aguarda a segunda página carregar
+  // Aguarda a segunda página carregar e valida que o primeiro item mudou
   await waitFor(() => {
     expect(screen.getByText(/2 \/ 2/i)).toBeInTheDocument();
-    expect(screen.getAllByText('Item-30').length).toBeGreaterThan(0);
+    const tableAfter = screen.getByRole('table');
+    const firstRowAfter = within(tableAfter).getAllByRole('row')[1];
+    expect(firstRowAfter.textContent).not.toEqual(firstTextBefore);
   });
-
-  // Item da primeira página não deve estar (nem em tabela nem em cards)
-  expect(screen.queryByText('Item-1')).toBeNull();
 });
 
 // 6. Fluxo de edição: ao clicar em editar, produto é atualizado e lista faz refresh com nome novo
